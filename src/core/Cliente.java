@@ -1,8 +1,10 @@
 package core;
 
+
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
 
 public class Cliente extends Thread
 {	
@@ -24,14 +26,26 @@ public class Cliente extends Thread
 	
 	private String descifrado;
 	
-	private PrivateKey privada;
+	private PrivateKey privada = null;
+	
+	private PublicKey publica = null;
+	
+	private PublicKey alterpublica = null; 
 	
 	public Cliente(String ipaddress, int port, String hashing, String descifrado)
 	{
 		this.ipaddress = ipaddress;
 		this.port = port;
 		this.hashing = hashing;
-		this.descifrado = descifrado;
+		this.descifrado = descifrado; 
+		try 
+		{		
+			principal = new Socket(ipaddress, port);
+			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
+			salida = new PrintWriter(principal.getOutputStream(), true);						
+		}
+		catch (Exception e) 
+		{	e.printStackTrace();	}
 	}
 	
 	private byte[] obtenerHash(String algorithm, String filename)
@@ -52,7 +66,7 @@ public class Cliente extends Thread
 	
 	private Key crearLlave()
 	{
-		KeyPairGenerator generator; PublicKey publica = null;
+		KeyPairGenerator generator; 
 		try 
 		{
 			generator = KeyPairGenerator.getInstance(descifrado);
@@ -71,14 +85,23 @@ public class Cliente extends Thread
 	
 	public void run() 
 	{
-		System.out.println("Es läuft");
 		try 
 		{
-			principal = new Socket(ipaddress, port);
-			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
-			salida = new PrintWriter(principal.getOutputStream(), true);
+			crearLlave(); byte[] pubkey = publica.getEncoded(); 
+			salida.println(pubkey.length);
+			salida.print(pubkey);
+			int lS = Integer.parseInt(entrada.readLine());
+			byte[] llaveC = new byte[lS];
+			principal.getInputStream().read(llaveC, 0, lS);
+			X509EncodedKeySpec ks = new X509EncodedKeySpec(llaveC);
+			KeyFactory kf = KeyFactory.getInstance(descifrado);
+			alterpublica = kf.generatePublic(ks);
+			//Aquí se hace el handshake y se envía el archivo
+			entrada.close();
+			salida.close();
+			principal.close();
 		} 
 		catch (Exception e) 
-		{	e.printStackTrace();	} 
+		{	e.printStackTrace();	}
 	}
 }

@@ -28,9 +28,9 @@ public class Servidor
 
 	private static String hashing; 
 
-	private static PrivateKey privada;
+	private static PrivateKey privada = null;
 
-	private static PublicKey publica;
+	private static PublicKey publica = null;
 
 	private static byte[] obtenerHash(String algorithm, String filename)
 	{
@@ -82,7 +82,7 @@ public class Servidor
 					if(pool.size() < clients)
 					{
 						Socket newconn = receptor.accept();
-						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash);
+						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, publica, cifrado);
 						pool.add(actual); actual.start();
 					}					
 				} 
