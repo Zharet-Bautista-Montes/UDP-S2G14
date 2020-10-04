@@ -4,23 +4,37 @@ import java.io.*;
 import java.net.Socket;
 import java.security.*;
 
-public class Cliente 
+public class Cliente extends Thread
 {	
-	private Socket socket;
+	private Socket principal;
 	
-	private String nombre; 
+	private int id; 
+	
+	private String ipaddress;
+	
+	private int port;
 	
 	private BufferedReader entrada; 
 	
 	private PrintWriter salida; 
 	
-	private static String hashing; 
+	private File requested; 
 	
-	private static String descifrado;
+	private String hashing; 
 	
-	private static PrivateKey privada;
+	private String descifrado;
 	
-	public static byte[] obtenerHash(String algorithm, String filename)
+	private PrivateKey privada;
+	
+	public Cliente(String ipaddress, int port, String hashing, String descifrado)
+	{
+		this.ipaddress = ipaddress;
+		this.port = port;
+		this.hashing = hashing;
+		this.descifrado = descifrado;
+	}
+	
+	private byte[] obtenerHash(String algorithm, String filename)
 	{
 		MessageDigest hash = null; 
 		try 
@@ -36,7 +50,7 @@ public class Cliente
 		return hash.digest(); 
 	}
 	
-	public Key crearLlave()
+	private Key crearLlave()
 	{
 		KeyPairGenerator generator; PublicKey publica = null;
 		try 
@@ -52,10 +66,19 @@ public class Cliente
 		return publica;
 	}
 	
-	public static void main(String[] args) 
+	private void setID(int id)
+	{	this.id = id;	}
+	
+	public void run() 
 	{
-		// TODO Auto-generated method stub
-
+		System.out.println("Es läuft");
+		try 
+		{
+			principal = new Socket(ipaddress, port);
+			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
+			salida = new PrintWriter(principal.getOutputStream(), true);
+		} 
+		catch (Exception e) 
+		{	e.printStackTrace();	} 
 	}
-
 }
