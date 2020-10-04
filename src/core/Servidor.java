@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.security.*;
 import java.util.ArrayList;
 import java.util.Scanner;
+//import javax.net.ssl.SSLServerSocket;
+//import javax.net.ssl.SSLSocket;
 
 public class Servidor 
 {
@@ -75,12 +77,12 @@ public class Servidor
 			filehash = obtenerHash(hashing, fileloc);	
 			while(clients >= (idassigner + 1))
 			{
-				String orden = consola.next();
-				if(orden.equals("STOP")) forzarTerminacion();
 				try 
 				{
 					if(pool.size() < clients)
 					{
+						String orden = consola.next();
+						if(orden.equals("STOP")) forzarTerminacion();
 						Socket newconn = receptor.accept();
 						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, publica, cifrado);
 						pool.add(actual); actual.start();
@@ -91,11 +93,6 @@ public class Servidor
 
 			}
 		}
-	}
-
-	public static void transferir()
-	{ 
-
 	}
 
 	public static void forzarTerminacion()
@@ -121,11 +118,12 @@ public class Servidor
 		{	
 			InetAddress ip = InetAddress.getLocalHost();
 			System.out.println("La dirección IP del servidor es: " + ip.toString());
-			receptor = new ServerSocket(puerto);
+			receptor = new ServerSocket();
 			crearLlave();
 			System.out.println("Si en algún momento desea detener el servidor, solo ingrese STOP");
 			ejecutar();
 		} 
-		catch (Exception e) {	e.printStackTrace(); 	}
+		catch (Exception e) 
+		{	e.printStackTrace(); 	}
 	}
 }

@@ -1,20 +1,18 @@
 package core;
 
-
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
+//import javax.net.ssl.SSLSocket;
 
 public class Cliente extends Thread
 {	
-	private Socket principal;
-	
-	private int id; 
+	private Socket principal; 
 	
 	private String ipaddress;
 	
-	private int port;
+	private int id, port, ACK, SYN, FIN;
 	
 	private BufferedReader entrada; 
 	
@@ -42,7 +40,8 @@ public class Cliente extends Thread
 		{		
 			principal = new Socket(ipaddress, port);
 			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
-			salida = new PrintWriter(principal.getOutputStream(), true);						
+			salida = new PrintWriter(principal.getOutputStream(), true);	
+			System.out.println("Done!"); this.id = Integer.parseInt(entrada.readLine());
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -80,13 +79,26 @@ public class Cliente extends Thread
 		return publica;
 	}
 	
-	private void setID(int id)
-	{	this.id = id;	}
+	private void recibirArchivo()
+	{		
+		try 
+		{
+			//Se puede definir un número en lugar de principal.getReceiveBufferSize()
+			byte[] buffer = new byte[principal.getReceiveBufferSize()];
+			DataInputStream dis = new DataInputStream(principal.getInputStream());
+			String filename = dis.readUTF(); long filesize = dis.readLong();
+			FileOutputStream fos = new FileOutputStream(filename); int piece; 
+			while((piece = dis.read(buffer)) != -1) fos.write(buffer, 0, piece);
+		} 
+		catch (Exception e) 
+		{	e.printStackTrace();	}				
+	}
 	
 	public void run() 
 	{
 		try 
 		{
+			//SYN = 0; salida.println(SYN);
 			crearLlave(); byte[] pubkey = publica.getEncoded(); 
 			salida.println(pubkey.length);
 			salida.print(pubkey);
@@ -96,7 +108,7 @@ public class Cliente extends Thread
 			X509EncodedKeySpec ks = new X509EncodedKeySpec(llaveC);
 			KeyFactory kf = KeyFactory.getInstance(descifrado);
 			alterpublica = kf.generatePublic(ks);
-			//Aquí se hace el handshake y se envía el archivo
+			recibirArchivo();
 			entrada.close();
 			salida.close();
 			principal.close();
