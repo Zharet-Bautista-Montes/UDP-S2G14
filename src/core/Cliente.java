@@ -18,7 +18,11 @@ public class Cliente extends Thread
 	
 	private PrintWriter salida; 
 	
-	private File requested; 
+	private byte[] requested; 
+	
+	private byte[] proofhash = {};
+	
+	private File logcliente; 
 	
 	private String hashing; 
 	
@@ -40,7 +44,7 @@ public class Cliente extends Thread
 		{		
 			principal = new Socket(ipaddress, port);
 			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
-			salida = new PrintWriter(principal.getOutputStream(), true); System.out.println("C");	
+			salida = new PrintWriter(principal.getOutputStream(), true);	
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -82,12 +86,16 @@ public class Cliente extends Thread
 	{		
 		try 
 		{
-			//Se puede definir un número en lugar de principal.getReceiveBufferSize()
-			byte[] buffer = new byte[principal.getReceiveBufferSize()];
+			requested = new byte[512];
 			DataInputStream dis = new DataInputStream(principal.getInputStream());
 			String filename = dis.readUTF(); long filesize = dis.readLong();
-			FileOutputStream fos = new FileOutputStream(filename); int piece; 
-			while((piece = dis.read(buffer)) != -1) fos.write(buffer, 0, piece);
+			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + filename); int piece; 
+			while((piece = dis.read(requested)) != -1) fos.write(requested, 0, piece);
+			fos.close(); fos = null; System.gc();
+			dis.read(proofhash); String neg = " ";
+			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + filename);
+			if(referenz.equals(proofhash)) neg = " no ";
+			System.out.println("El archivo enviado al cliente " + id + neg + "fue alterado");
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}				
@@ -98,18 +106,22 @@ public class Cliente extends Thread
 		try 
 		{
 			//SYN = 0; salida.println(SYN);
-			System.out.println("F");
-			this.id = Integer.parseInt(entrada.readLine()); System.out.println(id); 
+			System.out.println("C");
+			this.id = Integer.parseInt(entrada.readLine()); System.out.println(id);
+			logcliente = new File("clientlog/Log" + id + "_" + this.toString());
+			/**
 			crearLlave(); byte[] pubkey = publica.getEncoded(); 
 			salida.println(pubkey.length);
-			salida.print(pubkey);
+			salida.println(pubkey);
 			int lS = Integer.parseInt(entrada.readLine());
 			byte[] llaveC = new byte[lS];
 			principal.getInputStream().read(llaveC, 0, lS);
 			X509EncodedKeySpec ks = new X509EncodedKeySpec(llaveC);
 			KeyFactory kf = KeyFactory.getInstance(descifrado);
 			alterpublica = kf.generatePublic(ks);
+			*/
 			recibirArchivo();
+			System.out.println(id + " Yes!");
 			entrada.close();
 			salida.close();
 			principal.close();
