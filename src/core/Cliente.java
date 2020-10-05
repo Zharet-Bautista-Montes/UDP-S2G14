@@ -2,6 +2,7 @@ package core;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.ArrayList;
 
@@ -67,19 +68,17 @@ public class Cliente extends Thread
 			requested = new byte[512];
 			DataInputStream dis = new DataInputStream(principal.getInputStream());
 			String filename = dis.readUTF(); long filesize = dis.readLong(), avance = 0;
+			String hash = dis.readUTF(); System.out.println(hash);
+			long initime = System.currentTimeMillis(); 
 			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + filename); int piece; 
-			long initime = System.currentTimeMillis();
 			while((piece = dis.read(requested)) != -1)
 			{
 				fos.write(requested, 0, piece); avance += piece;
 			}
 			long fintime = System.currentTimeMillis();
-			/** Hay problemas con el hash
-			//String hash = dis.readUTF(); System.out.println(hash);
-			InputStream is = principal.getInputStream();
-			is.read(proofhash); */ String neg = " ";
-			//byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + filename); 
-			//if(referenz.equals(proofhash)) neg = " no "; 
+			proofhash = hash.getBytes(); String neg = " "; 
+			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + filename); 
+			if(!referenz.equals(proofhash)) neg = " no "; 
 			System.out.println("El archivo enviado al cliente " + id + neg + "fue alterado"); 
 			RegistroLog log = new RegistroLog(id, filename, (double) filesize/1024, neg.equals(" "), (fintime-initime)/1000); 
 			reporte.add(log);

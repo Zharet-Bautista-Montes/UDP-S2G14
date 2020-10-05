@@ -2,6 +2,7 @@ package core;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.ArrayList;
 
@@ -43,9 +44,11 @@ public class Conexion extends Thread
 			byte[] filebytes = new byte[512]; 
 			DataOutputStream dos = new DataOutputStream(vigente.getOutputStream());
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(fileToSend)));
-			dis.read(filebytes, 0, 0); int chunk;
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			dos.writeUTF(fileToSend.getName()); dos.writeLong(fileToSend.length());
+			dos.writeUTF(new String(temphash));
 			long initime = System.currentTimeMillis();
+			dis.read(filebytes, 0, 0); int chunk;
 			while((chunk = dis.read(filebytes)) != -1) dos.write(filebytes, 0, chunk);
 			long fintime = System.currentTimeMillis();
 			/** Hay problemas con el hash

@@ -56,7 +56,7 @@ public class ElaboradorClientes
 				Cliente neu = new Cliente(ipaddress, port, hashing, descifrado, logcliente);
 				encargo.add(neu); neu.start();
 			}
-			registrarLog();
+			//registrarLog();
 		}
 	}
 }

@@ -53,7 +53,7 @@ public class Servidor
 	public static void ejecutar()
 	{
 		String fileloc = ""; byte[] filehash = null;
-		if (filedigit==1) fileloc = "prooffiles/Tarea_HTML.txt";
+		if (filedigit==1) fileloc = "prooffiles/Electrocardiograma funcional.txt";
 		else if (filedigit==2) fileloc = "prooffiles/Tarea_HTML.txt";
 		archivo = new File(fileloc);
 		if(archivo != null)
@@ -124,7 +124,7 @@ public class Servidor
 				receptor = new ServerSocket(puerto);
 				System.out.println("Si en algún momento desea detener el servidor, solo ingrese STOP");
 				ejecutar();
-				registrarLog();
+				//registrarLog();
 			} 
 			catch (Exception e) 
 			{	e.printStackTrace(); 	}
