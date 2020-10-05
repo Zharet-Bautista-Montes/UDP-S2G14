@@ -17,6 +17,8 @@ public class Servidor
 	private static ServerSocket receptor; 
 
 	private static ArrayList<Conexion> pool;
+	
+	private static InetAddress ip;
 
 	private static int idassigner = 0; 
 
@@ -81,11 +83,11 @@ public class Servidor
 				{
 					if(pool.size() < clients)
 					{
-						String orden = consola.next();
-						if(orden.equals("STOP")) forzarTerminacion();
-						Socket newconn = receptor.accept();
+						//String orden = consola.next();
+						//if(orden.equals("STOP")) forzarTerminacion();
+						Socket newconn = receptor.accept(); System.out.println(idassigner);
 						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, publica, cifrado);
-						pool.add(actual); actual.start();
+						pool.add(actual); actual.start(); idassigner++; System.out.println("S");
 					}					
 				} 
 				catch (IOException e) 
@@ -116,9 +118,9 @@ public class Servidor
 		cifrado = "RSA"; hashing = "MD5";
 		try 
 		{	
-			InetAddress ip = InetAddress.getLocalHost();
+			ip = InetAddress.getLocalHost();
 			System.out.println("La dirección IP del servidor es: " + ip.toString());
-			receptor = new ServerSocket();
+			receptor = new ServerSocket(puerto);
 			crearLlave();
 			System.out.println("Si en algún momento desea detener el servidor, solo ingrese STOP");
 			ejecutar();
