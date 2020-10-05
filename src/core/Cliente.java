@@ -40,8 +40,7 @@ public class Cliente extends Thread
 		{		
 			principal = new Socket(ipaddress, port);
 			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
-			salida = new PrintWriter(principal.getOutputStream(), true);	
-			System.out.println("Done!"); this.id = Integer.parseInt(entrada.readLine());
+			salida = new PrintWriter(principal.getOutputStream(), true); System.out.println("C");	
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -99,6 +98,8 @@ public class Cliente extends Thread
 		try 
 		{
 			//SYN = 0; salida.println(SYN);
+			System.out.println("F");
+			this.id = Integer.parseInt(entrada.readLine()); System.out.println(id); 
 			crearLlave(); byte[] pubkey = publica.getEncoded(); 
 			salida.println(pubkey.length);
 			salida.print(pubkey);

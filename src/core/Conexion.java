@@ -11,6 +11,8 @@ public class Conexion extends Thread
 	private PrintWriter envios; 
 
 	private BufferedReader recibos;
+	
+	private int idassigned;
 
 	private Socket vigente;
 	
@@ -25,11 +27,12 @@ public class Conexion extends Thread
 	public Conexion(Socket StoC, int idassigned, File archiv, byte[] hash, PublicKey llave, String cipher)
 	{
 		vigente = StoC; serverkey = llave; cifrado = cipher; fileToSend = archiv;
+		this.idassigned = idassigned;
 		try 
 		{
 			envios = new PrintWriter(vigente.getOutputStream(), true);
 			recibos = new BufferedReader(new InputStreamReader(vigente.getInputStream()));	
-			envios.println(idassigned);
+			System.out.println("Done!");
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -56,7 +59,8 @@ public class Conexion extends Thread
 		try 
 		{
 			//int syncliente = Integer.parseInt(recibos.readLine());
-			
+			System.out.println("L");
+			envios.println(idassigned); 
 			int lC = Integer.parseInt(recibos.readLine());
 			byte[] llaveC = new byte[lC];
 			vigente.getInputStream().read(llaveC, 0, lC);

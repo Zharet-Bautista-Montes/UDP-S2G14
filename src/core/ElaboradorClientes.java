@@ -31,7 +31,7 @@ public class ElaboradorClientes
 		while(encargo.size() < totalClients)
 		{
 			Cliente neu = new Cliente(ipaddress, port, hashing, descifrado);
-			encargo.add(neu); //neu.start();
+			encargo.add(neu); neu.start();
 		}
 	}
 }
