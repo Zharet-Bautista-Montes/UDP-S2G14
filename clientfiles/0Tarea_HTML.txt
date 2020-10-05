@@ -1,4 +1,15 @@
-radiogr&aacute;fico se hace posible gracias al Machine Learning</h1></font>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Diagn&oacute;stico de COVID-19 mediante an&aacute;lisis radiogr&aacute;fico se hace posible gracias al Machine Learning</title>
+</head>
+<body bgcolor="lightblue" font face="Eras ITC">
+<section class="intro">
+<center>
+<div class="titular">
+<div class="titulo-principal-bk" style="color:mediumblue"><font face="Eras ITC">
+<h1 itemprop="headline" class="titulo" id="p323026-m893-892-894">Diagn&oacute;stico de COVID-19 mediante an&aacute;lisis radiogr&aacute;fico se hace posible gracias al Machine Learning</h1></font>
 </div>
 </div>
 <font face="Times New Roman" size="4">
@@ -39,4 +50,4 @@ radiogr&aacute;fico se hace posible gracias al Machine Learning</h1></font>
 </div>
 </font>
 </body>
-</html>!å∆∑M&πÁw“‹^j^Û
+</html>
