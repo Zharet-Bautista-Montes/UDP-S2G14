@@ -6,10 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
-//import javax.net.ssl.SSLServerSocket;
-//import javax.net.ssl.SSLSocket;
-
 public class Servidor 
 {
 	private static Scanner consola = new Scanner(System.in);
@@ -17,8 +15,10 @@ public class Servidor
 	private static ServerSocket receptor; 
 
 	private static ArrayList<Conexion> pool;
-	
+
 	private static InetAddress ip;
+	
+	private static File archivo;
 
 	private static int idassigner = 0; 
 
@@ -30,11 +30,9 @@ public class Servidor
 
 	private static String cifrado;
 
-	private static String hashing; 
+	private static String hashing;
 
-	private static PrivateKey privada = null;
-
-	private static PublicKey publica = null;
+	private static ArrayList<RegistroLog> logservidor; 
 
 	private static byte[] obtenerHash(String algorithm, String filename)
 	{
@@ -52,28 +50,12 @@ public class Servidor
 		return hash.digest(); 
 	}
 
-	private static Key crearLlave()
-	{
-		KeyPairGenerator generator;
-		try 
-		{
-			generator = KeyPairGenerator.getInstance(cifrado);
-			generator.initialize(1024);
-			KeyPair par = generator.generateKeyPair();
-			publica = par.getPublic();
-			privada = par.getPrivate(); 
-		} 
-		catch (NoSuchAlgorithmException e) 
-		{	e.printStackTrace();	}
-		return publica;
-	}
-
 	public static void ejecutar()
 	{
 		String fileloc = ""; byte[] filehash = null;
 		if (filedigit==1) fileloc = "prooffiles/Tarea_HTML.txt";
 		else if (filedigit==2) fileloc = "prooffiles/Tarea_HTML.txt";
-		File archivo = new File(fileloc);
+		archivo = new File(fileloc);
 		if(archivo != null)
 		{	
 			filehash = obtenerHash(hashing, fileloc);	
@@ -85,9 +67,9 @@ public class Servidor
 					{
 						//String orden = consola.next();
 						//if(orden.equals("STOP")) forzarTerminacion();
-						Socket newconn = receptor.accept(); System.out.println(idassigner);
-						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, publica, cifrado);
-						pool.add(actual); actual.start(); idassigner++; System.out.println("S");
+						Socket newconn = receptor.accept();
+						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, cifrado, logservidor);
+						pool.add(actual); actual.start(); idassigner++;
 					}					
 				} 
 				catch (IOException e) 
@@ -95,6 +77,23 @@ public class Servidor
 
 			}
 		}
+	}
+	
+	public static void registrarLog()
+	{
+		File reporteC = new File("serverlog/Prueba_" + logservidor.get(0).getDate());
+		try
+		{
+			PrintWriter reportador = new PrintWriter(reporteC);
+			reportador.println(new Date() + " REPORT");
+			reportador.println("File Name: " + archivo.getName());
+			reportador.println("File Size: " + archivo.length() + " MB");
+			for(RegistroLog logS : logservidor)
+				reportador.print(logS.toString());
+			reportador.flush();	reportador.close();
+		}
+		catch(Exception e)
+		{	e.printStackTrace();	}
 	}
 
 	public static void forzarTerminacion()
@@ -115,17 +114,20 @@ public class Servidor
 			filedigit = consola.nextInt();
 			wrong = (filedigit == 1 || filedigit == 2) ? false : true;
 		}
-		cifrado = "RSA"; hashing = "MD5";
-		try 
-		{	
-			ip = InetAddress.getLocalHost();
-			System.out.println("La dirección IP del servidor es: " + ip.toString());
-			receptor = new ServerSocket(puerto);
-			crearLlave();
-			System.out.println("Si en algún momento desea detener el servidor, solo ingrese STOP");
-			ejecutar();
-		} 
-		catch (Exception e) 
-		{	e.printStackTrace(); 	}
+		if(clients > 0)
+		{
+			cifrado = "RSA"; hashing = "MD5"; logservidor = new ArrayList<RegistroLog>();
+			try 
+			{	
+				ip = InetAddress.getLocalHost();
+				System.out.println("La dirección IP del servidor es: " + ip.toString());
+				receptor = new ServerSocket(puerto);
+				System.out.println("Si en algún momento desea detener el servidor, solo ingrese STOP");
+				ejecutar();
+				registrarLog();
+			} 
+			catch (Exception e) 
+			{	e.printStackTrace(); 	}
+		}
 	}
 }
