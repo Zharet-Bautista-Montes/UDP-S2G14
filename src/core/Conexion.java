@@ -3,8 +3,7 @@ package core;
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
-import java.security.spec.X509EncodedKeySpec;
-//import javax.net.ssl.SSLSocket;
+import java.util.ArrayList;
 
 public class Conexion extends Thread
 {
@@ -19,17 +18,15 @@ public class Conexion extends Thread
 	private Socket vigente;
 	
 	private File fileToSend;
-
-	private PublicKey clientkey; 
-
-	private PublicKey serverkey;
 	
 	private String cifrado;
+	
+	private ArrayList<RegistroLog> reporte;
 
-	public Conexion(Socket StoC, int idassigned, File archiv, byte[] hash, PublicKey llave, String cipher)
+	public Conexion(Socket StoC, int idassigned, File archiv, byte[] hash, String cipher, ArrayList<RegistroLog> rlc)
 	{
-		vigente = StoC; serverkey = llave; cifrado = cipher; fileToSend = archiv;
-		this.idassigned = idassigned; temphash = hash;
+		vigente = StoC; cifrado = cipher; fileToSend = archiv;
+		this.idassigned = idassigned; temphash = hash; reporte = rlc;
 		try 
 		{
 			envios = new PrintWriter(vigente.getOutputStream(), true);
@@ -46,10 +43,18 @@ public class Conexion extends Thread
 			byte[] filebytes = new byte[512]; 
 			DataOutputStream dos = new DataOutputStream(vigente.getOutputStream());
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(fileToSend)));
-			dis.read(filebytes, 0, filebytes.length); int chunk;
-			dos.writeUTF(fileToSend.getName()); dos.writeLong(filebytes.length);
+			dis.read(filebytes, 0, 0); int chunk;
+			dos.writeUTF(fileToSend.getName()); dos.writeLong(fileToSend.length());
+			long initime = System.currentTimeMillis();
 			while((chunk = dis.read(filebytes)) != -1) dos.write(filebytes, 0, chunk);
-			dos.write(temphash);
+			long fintime = System.currentTimeMillis();
+			/** Hay problemas con el hash
+			//dos.writeUTF("Hash"); System.out.println("Hash");
+			OutputStream os = vigente.getOutputStream(); os.write(temphash);*/
+			boolean confirmado = false; 
+			//confirmado = Boolean.parseBoolean(recibos.readLine());
+			RegistroLog log = new RegistroLog(idassigned, confirmado, (fintime-initime)/1000); 
+			reporte.add(log);
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -60,21 +65,8 @@ public class Conexion extends Thread
 		try 
 		{
 			//int syncliente = Integer.parseInt(recibos.readLine());
-			System.out.println("L");
-			envios.println(idassigned); 
-			/**
-			int lC = Integer.parseInt(recibos.readLine());
-			byte[] llaveC = new byte[lC];
-			vigente.getInputStream().read(llaveC, 0, lC);
-			X509EncodedKeySpec ks = new X509EncodedKeySpec(llaveC);
-			KeyFactory kf = KeyFactory.getInstance(cifrado);
-			clientkey = kf.generatePublic(ks);
-			byte[] llaveS = serverkey.getEncoded(); 
-			envios.println(llaveS.length);
-			envios.print(llaveS);
-			*/
+			envios.println(idassigned);
 			transmitirArchivo();
-			System.out.println("Done! " + idassigned);
 			recibos.close();
 			envios.close();
 			vigente.close();

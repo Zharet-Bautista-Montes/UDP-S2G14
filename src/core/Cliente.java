@@ -3,8 +3,7 @@ package core;
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
-import java.security.spec.X509EncodedKeySpec;
-//import javax.net.ssl.SSLSocket;
+import java.util.ArrayList;
 
 public class Cliente extends Thread
 {	
@@ -20,26 +19,21 @@ public class Cliente extends Thread
 	
 	private byte[] requested; 
 	
-	private byte[] proofhash = {};
-	
-	private File logcliente; 
+	private byte[] proofhash = {}; 
 	
 	private String hashing; 
 	
-	private String descifrado;
+	private String descifrado; 
 	
-	private PrivateKey privada = null;
+	private ArrayList<RegistroLog> reporte;
 	
-	private PublicKey publica = null;
-	
-	private PublicKey alterpublica = null; 
-	
-	public Cliente(String ipaddress, int port, String hashing, String descifrado)
+	public Cliente(String ipaddress, int port, String hashing, String descifrado, ArrayList<RegistroLog> reporte)
 	{
 		this.ipaddress = ipaddress;
 		this.port = port;
 		this.hashing = hashing;
 		this.descifrado = descifrado; 
+		this.reporte = reporte;
 		try 
 		{		
 			principal = new Socket(ipaddress, port);
@@ -66,36 +60,29 @@ public class Cliente extends Thread
 		return hash.digest(); 
 	}
 	
-	private Key crearLlave()
-	{
-		KeyPairGenerator generator; 
-		try 
-		{
-			generator = KeyPairGenerator.getInstance(descifrado);
-			generator.initialize(1024);
-			KeyPair par = generator.generateKeyPair();
-			publica = par.getPublic();
-			privada = par.getPrivate(); 
-		} 
-		catch (NoSuchAlgorithmException e) 
-		{	e.printStackTrace();	}
-		return publica;
-	}
-	
 	private void recibirArchivo()
 	{		
 		try 
 		{
 			requested = new byte[512];
 			DataInputStream dis = new DataInputStream(principal.getInputStream());
-			String filename = dis.readUTF(); long filesize = dis.readLong();
+			String filename = dis.readUTF(); long filesize = dis.readLong(), avance = 0;
 			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + filename); int piece; 
-			while((piece = dis.read(requested)) != -1) fos.write(requested, 0, piece);
-			fos.close(); fos = null; System.gc();
-			dis.read(proofhash); String neg = " ";
-			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + filename);
-			if(referenz.equals(proofhash)) neg = " no ";
-			System.out.println("El archivo enviado al cliente " + id + neg + "fue alterado");
+			long initime = System.currentTimeMillis();
+			while((piece = dis.read(requested)) != -1)
+			{
+				fos.write(requested, 0, piece); avance += piece;
+			}
+			long fintime = System.currentTimeMillis();
+			/** Hay problemas con el hash
+			//String hash = dis.readUTF(); System.out.println(hash);
+			InputStream is = principal.getInputStream();
+			is.read(proofhash); */ String neg = " ";
+			//byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + filename); 
+			//if(referenz.equals(proofhash)) neg = " no "; 
+			System.out.println("El archivo enviado al cliente " + id + neg + "fue alterado"); 
+			RegistroLog log = new RegistroLog(id, filename, (double) filesize/1024, neg.equals(" "), (fintime-initime)/1000); 
+			reporte.add(log);
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}				
@@ -106,22 +93,8 @@ public class Cliente extends Thread
 		try 
 		{
 			//SYN = 0; salida.println(SYN);
-			System.out.println("C");
-			this.id = Integer.parseInt(entrada.readLine()); System.out.println(id);
-			logcliente = new File("clientlog/Log" + id + "_" + this.toString());
-			/**
-			crearLlave(); byte[] pubkey = publica.getEncoded(); 
-			salida.println(pubkey.length);
-			salida.println(pubkey);
-			int lS = Integer.parseInt(entrada.readLine());
-			byte[] llaveC = new byte[lS];
-			principal.getInputStream().read(llaveC, 0, lS);
-			X509EncodedKeySpec ks = new X509EncodedKeySpec(llaveC);
-			KeyFactory kf = KeyFactory.getInstance(descifrado);
-			alterpublica = kf.generatePublic(ks);
-			*/
+			this.id = Integer.parseInt(entrada.readLine());
 			recibirArchivo();
-			System.out.println(id + " Yes!");
 			entrada.close();
 			salida.close();
 			principal.close();

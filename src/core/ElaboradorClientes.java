@@ -1,5 +1,6 @@
 package core;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -19,6 +20,25 @@ public class ElaboradorClientes
 
 	private static String descifrado;
 
+	private static ArrayList<RegistroLog> logcliente;
+	
+	private static void registrarLog()
+	{
+		File reporteC = new File("clientlog/Prueba_" + logcliente.get(0).getDate());
+		try
+		{
+			PrintWriter reportador = new PrintWriter(reporteC);
+			reportador.println(logcliente.get(0).getDate() + " REPORT");
+			reportador.println("File Name: " + logcliente.get(0).getFileName());
+			reportador.println("File Size: " + logcliente.get(0).getFileSize() + " MB");
+			for(RegistroLog logC : logcliente)
+				reportador.print(logC.toString());
+			reportador.flush();	reportador.close();
+		}
+		catch(Exception e)
+		{	e.printStackTrace();	}
+	}
+
 	public static void main(String[] args) 
 	{
 		encargo = new ArrayList<Cliente>(); hashing = "MD5"; descifrado = "RSA";
@@ -28,10 +48,15 @@ public class ElaboradorClientes
 		ipaddress = parametrizador.next(); 
 		System.out.println("Ahora indique el puerto de conexion");
 		port = parametrizador.nextInt();
-		while(encargo.size() < totalClients)
+		if(totalClients > 0)
 		{
-			Cliente neu = new Cliente(ipaddress, port, hashing, descifrado);
-			encargo.add(neu); neu.start();
+			logcliente = new ArrayList<RegistroLog>();
+			while(encargo.size() < totalClients)
+			{
+				Cliente neu = new Cliente(ipaddress, port, hashing, descifrado, logcliente);
+				encargo.add(neu); neu.start();
+			}
+			registrarLog();
 		}
 	}
 }
