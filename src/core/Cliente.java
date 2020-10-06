@@ -9,7 +9,7 @@ public class Cliente extends Thread
 {	
 	private Socket principal; 
 	
-	private int id;
+	private int id, counter;
 	
 	private BufferedReader entrada; 
 	
@@ -23,15 +23,15 @@ public class Cliente extends Thread
 	
 	private ArrayList<RegistroLog> reporte;
 	
-	public Cliente(String ipaddress, int port, String hashing, String descifrado, ArrayList<RegistroLog> reporte)
+	public Cliente(String ipaddress, int port, String hashing, ArrayList<RegistroLog> reporte, int counter)
 	{
-		this.hashing = hashing;
-		this.reporte = reporte;
+		this.hashing = hashing; this.reporte = reporte; this.counter = counter;
 		try 
 		{		
 			principal = new Socket(ipaddress, port);
 			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
-			salida = new PrintWriter(principal.getOutputStream(), true);	
+			salida = new PrintWriter(principal.getOutputStream(), true);
+			System.out.println("Conexión establecida");
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -47,6 +47,7 @@ public class Cliente extends Thread
 			byte[] buffer = new byte [1024]; int length;
 			while ((length = file.read(buffer)) != -1)
 			{	hash.update(buffer, 0, length);	}
+			file.close();
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -60,18 +61,23 @@ public class Cliente extends Thread
 			requested = new byte[512];
 			DataInputStream dis = new DataInputStream(principal.getInputStream());
 			String filename = dis.readUTF(); long filesize = dis.readLong();
-			String hash = dis.readUTF();
+			String hash = dis.readUTF(); int conteo = 0, piece;
 			long initime = System.currentTimeMillis(); 
-			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + "_" + filename); int piece; 
+			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + "_" + filename); 
 			while((piece = dis.read(requested)) != -1)
-			{	fos.write(requested, 0, piece); if(piece < 512) break;	}
+			{	fos.write(requested, 0, piece); conteo += piece; if(piece < 512) break;	}
 			long fintime = System.currentTimeMillis();
+			System.out.println("Archivo recibido y en verificación:");
 			proofhash = hash.getBytes(); String neg = " "; 
 			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + "_" + filename); 
-			if(!referenz.equals(proofhash)) neg = " no "; 
-			System.out.println("El archivo enviado al cliente " + id + neg + "fue alterado"); 
-			RegistroLog log = new RegistroLog(id, filename, (double) filesize/1024, neg.equals(" no "), (fintime-initime)/1000); 
-			reporte.add(log);
+			if(!referenz.equals(proofhash)) neg = " No "; 
+			System.out.println("El archivo recibido por el cliente " + id + neg + "fue alterado"); 
+			String komplett = "Recibió el archivo completamente";
+			if(conteo < filesize) komplett = neg + komplett; System.out.println(komplett);
+			salida.println(neg); double duration = (fintime-initime)/1000.0; 
+			System.out.println("Tiempo de transferencia: " + duration + " s");
+			RegistroLog log = new RegistroLog(id, filename, (double) filesize/1024, neg.equals(" No "), duration); 
+			reporte.add(log); fos.close();
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}				
@@ -88,12 +94,12 @@ public class Cliente extends Thread
 			int ACK = Integer.parseInt(synservidor[1]) + 1; SYN = 0; NSI++;
 			salida.println(SYN + ";" + NSI + ";" + ACK);
 			this.id = Integer.parseInt(entrada.readLine());
-			System.out.println("Conexión exitosa");
+			System.out.println("Conexión exitosa, listo para recibir archivo");
 			recibirArchivo();
 			int FIN = 1; salida.println(FIN);
 			String[] endservidor = entrada.readLine().split(";");
 			if(Integer.parseInt(endservidor[0]) == 1 && Integer.parseInt(endservidor[1]) == 1)
-				System.out.println("Conexión terminada");
+				System.out.println("FIN Servidor. Conexión terminada");
 			ACK = 1; salida.println(ACK);
 			entrada.close();
 			salida.close();

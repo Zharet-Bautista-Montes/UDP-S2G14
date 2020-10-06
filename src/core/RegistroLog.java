@@ -15,9 +15,9 @@ public class RegistroLog
 	
 	private boolean exitoso;
 	
-	private long transferTime; 
+	private double transferTime; 
 	
-	public RegistroLog(int id, String fname, double fsize, boolean success, long ttime)
+	public RegistroLog(int id, String fname, double fsize, boolean success, double ttime)
 	{
 		idCliente = id; 
 		FileName = fname;
@@ -27,7 +27,7 @@ public class RegistroLog
 		fecha_hora = new Date();
 	}
 	
-	public RegistroLog(int id, boolean success, long ttime)
+	public RegistroLog(int id, boolean success, double ttime)
 	{
 		idCliente = id; 
 		exitoso = success;
@@ -47,14 +47,14 @@ public class RegistroLog
 	public String toString()
 	{
 		String check = (exitoso) ? "YES" : "NO"; 
-		SimpleDateFormat date = new SimpleDateFormat("dd-MMM-aaaa");
-		SimpleDateFormat time = new SimpleDateFormat("hh:mm:ss");		
+		SimpleDateFormat date = new SimpleDateFormat("dd-MMM-yyyy");
+		SimpleDateFormat time = new SimpleDateFormat("hh:mm:ss a");		
 		String thislog = 
 				"------------------------------" + "\n"
 				+ "Client ID: " + idCliente + "\n"
 				+ "Date: " + date.format(fecha_hora) + "\n" 
 				+ "Time: " + time.format(fecha_hora) + "\n"
-				+ "Transfer Time: " + transferTime + "\n"
+				+ "Transfer Time: " + transferTime + " s \n"
 				+ "Successful: " + check;		
 		return thislog;
 	}

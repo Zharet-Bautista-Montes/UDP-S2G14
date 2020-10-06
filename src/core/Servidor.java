@@ -42,6 +42,7 @@ public class Servidor
 			byte[] buffer = new byte [1024]; int length;
 			while ((length = file.read(buffer)) != -1)
 			{	hash.update(buffer, 0, length);	}
+			file.close();
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -63,11 +64,10 @@ public class Servidor
 				{
 					if(pool.size() < clients)
 					{
-						//String orden = consola.next();
-						//if(orden.equals("STOP")) forzarTerminacion();
 						Socket newconn = receptor.accept();
 						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, logservidor);
 						pool.add(actual); actual.start(); idassigner++;
+						System.out.println("Clientes en simultáneo: " + pool.size());
 					}					
 				} 
 				catch (IOException e) 
@@ -94,8 +94,8 @@ public class Servidor
 		{	e.printStackTrace();	}
 	}
 
-	public static void forzarTerminacion()
-	{	idassigner = clients;	}
+	//public static void forzarTerminacion()
+	//{	idassigner = clients;	}
 
 	public static void main(String[] args) 
 	{
