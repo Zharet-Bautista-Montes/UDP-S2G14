@@ -45,12 +45,12 @@ public class Conexion extends Thread
 			dis.read(filebytes, 0, 0); int chunk;
 			while((chunk = dis.read(filebytes)) != -1) dos.write(filebytes, 0, chunk);
 			long fintime = System.currentTimeMillis();
-			String confirmado = " "; //recibos.readLine();
+			String confirmado = recibos.readLine(); 
 			System.out.println("El cliente " + idassigned + confirmado + "recibió el archivo incompleto");
-			long duration = (fintime-initime)/1000; 
+			double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
-			RegistroLog log = new RegistroLog(idassigned, confirmado.equals(" "), duration); 
-			reporte.add(log);
+			RegistroLog log = new RegistroLog(idassigned, confirmado.equals(" No "), duration); 
+			reporte.add(log); dis.close();
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -69,7 +69,8 @@ public class Conexion extends Thread
 			if(Integer.parseInt(achieved[0]) == 0) System.out.println("¡Listo!");
 			envios.println(idassigned);
 			transmitirArchivo();
-			recibos.readLine();
+			int endcliente = Integer.parseInt(recibos.readLine());
+			if(endcliente == 1) System.out.println("FIN Cliente");
 			int FIN = 1; ACK = 1; envios.println(FIN + ";" + ACK);
 			if(Integer.parseInt(recibos.readLine()) == 1) System.out.println("¡Hecho!");
 			recibos.close();
