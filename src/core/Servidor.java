@@ -17,7 +17,7 @@ public class Servidor
 	private static ArrayList<Conexion> pool;
 
 	private static InetAddress ip;
-	
+
 	private static File archivo;
 
 	private static int idassigner = 0; 
@@ -41,7 +41,7 @@ public class Servidor
 			FileInputStream file = new FileInputStream(filename);
 			byte[] buffer = new byte [1024]; int length;
 			while ((length = file.read(buffer)) != -1)
-			{	hash.update(buffer, 0, length);	}
+			{	 hash.update(buffer, 0, length);	}
 			file.close();
 		} 
 		catch (Exception e) 
@@ -65,27 +65,32 @@ public class Servidor
 					if(pool.size() < clients)
 					{
 						Socket newconn = receptor.accept();
-						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, logservidor);
+						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash);
 						pool.add(actual); actual.start(); idassigner++;
 						System.out.println("Clientes en simultáneo: " + pool.size());
-					}					
+					}
+
 				} 
 				catch (IOException e) 
 				{	e.printStackTrace();	}
-
+			}
+			while(pool.size() > 0)
+			{
+				Conexion s = pool.get(0);
+				if(s.hasEnded()) { logservidor.add(s.getReporte()); pool.remove(s); }
 			}
 		}
 	}
-	
+
 	public static void registrarLog()
 	{
-		File reporteC = new File("serverlog/Prueba_" + logservidor.get(0).getDate());
+		File reporteC = new File("serverlog/Prueba_" + idassigner);
 		try
 		{
 			PrintWriter reportador = new PrintWriter(reporteC);
-			reportador.println(new Date() + " REPORT");
+			reportador.println("LOG FOR " + new Date());
 			reportador.println("File Name: " + archivo.getName());
-			reportador.println("File Size: " + archivo.length() + " MB");
+			reportador.println("File Size: " + (double) archivo.length()/(Math.pow(1024, 2)) + " MB");
 			for(RegistroLog logS : logservidor)
 				reportador.print(logS.toString());
 			reportador.flush();	reportador.close();
@@ -99,7 +104,6 @@ public class Servidor
 
 	public static void main(String[] args) 
 	{
-		// TODO Auto-generated method stub
 		pool = new ArrayList<Conexion>();
 		System.out.println("Bienvenido al servidor TCP. Por favor, configure su puerto");
 		puerto = consola.nextInt(); 
@@ -121,7 +125,7 @@ public class Servidor
 				System.out.println("La dirección IP del servidor es: " + ip.toString());
 				receptor = new ServerSocket(puerto);
 				ejecutar();
-				//registrarLog();
+				registrarLog();
 			} 
 			catch (Exception e) 
 			{	e.printStackTrace(); 	}

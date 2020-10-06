@@ -3,13 +3,14 @@ package core;
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
-import java.util.ArrayList;
 
 public class Cliente extends Thread
 {	
 	private Socket principal; 
 	
-	private int id, counter;
+	private int id;
+	
+	private boolean done; 
 	
 	private BufferedReader entrada; 
 	
@@ -21,11 +22,11 @@ public class Cliente extends Thread
 	
 	private String hashing; 
 	
-	private ArrayList<RegistroLog> reporte;
+	private RegistroLog reporte;
 	
-	public Cliente(String ipaddress, int port, String hashing, ArrayList<RegistroLog> reporte, int counter)
+	public Cliente(String ipaddress, int port, String hashing)
 	{
-		this.hashing = hashing; this.reporte = reporte; this.counter = counter;
+		this.hashing = hashing; done = false; reporte = null;
 		try 
 		{		
 			principal = new Socket(ipaddress, port);
@@ -46,7 +47,7 @@ public class Cliente extends Thread
 			FileInputStream file = new FileInputStream(filename);
 			byte[] buffer = new byte [1024]; int length;
 			while ((length = file.read(buffer)) != -1)
-			{	hash.update(buffer, 0, length);	}
+			{	 hash.update(buffer, 0, length);	}
 			file.close();
 		} 
 		catch (Exception e) 
@@ -76,13 +77,19 @@ public class Cliente extends Thread
 			if(conteo < filesize) komplett = neg + komplett; System.out.println(komplett);
 			salida.println(neg); double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
-			RegistroLog log = new RegistroLog(id, filename, (double) filesize/1024, neg.equals(" No "), duration); 
-			reporte.add(log); fos.close();
+			reporte = new RegistroLog(id, filename, (double) filesize/(Math.pow(1024, 2)), neg.equals(" No "), duration); 
+			fos.close();
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}				
 	}
 	
+	public boolean isDone() 
+	{	return done;	}
+	
+	public RegistroLog getReporte()
+	{	return reporte;		}
+
 	public void run() 
 	{
 		try 
@@ -104,6 +111,7 @@ public class Cliente extends Thread
 			entrada.close();
 			salida.close();
 			principal.close();
+			done = true;
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
