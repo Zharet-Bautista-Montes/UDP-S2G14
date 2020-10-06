@@ -2,6 +2,7 @@ package core;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 
 public class ElaboradorClientes 
@@ -24,11 +25,11 @@ public class ElaboradorClientes
 	
 	private static void registrarLog()
 	{
-		File reporteC = new File("clientlog/Prueba_" + logcliente.get(0).getDate());
+		File reporteC = new File("clientlog/Prueba_" + totalClients);
 		try
 		{
 			PrintWriter reportador = new PrintWriter(reporteC);
-			reportador.println(logcliente.get(0).getDate() + " REPORT");
+			reportador.println("LOG FOR " + new Date());
 			reportador.println("File Name: " + logcliente.get(0).getFileName());
 			reportador.println("File Size: " + logcliente.get(0).getFileSize() + " MB");
 			for(RegistroLog logC : logcliente)
@@ -52,11 +53,13 @@ public class ElaboradorClientes
 		{
 			logcliente = new ArrayList<RegistroLog>();
 			while(encargo.size() < totalClients)
+			{	Cliente neu = new Cliente(ipaddress, port, hashing); encargo.add(neu); neu.start();	}
+			while(encargo.size() > 0)
 			{
-				Cliente neu = new Cliente(ipaddress, port, hashing, logcliente, contador);
-				encargo.add(neu); neu.start();
+				Cliente c = encargo.get(0);
+				if(c.isDone()) { logcliente.add(c.getReporte()); encargo.remove(c); }
 			}
-			//registrarLog();
+			registrarLog();
 		}
 	}
 }

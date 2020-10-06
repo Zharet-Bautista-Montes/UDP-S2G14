@@ -2,7 +2,6 @@ package core;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class Conexion extends Thread
 {
@@ -12,17 +11,20 @@ public class Conexion extends Thread
 	
 	private int idassigned;
 	
+	private boolean end;
+	
 	private byte[] temphash;
 
 	private Socket vigente;
 	
 	private File fileToSend;
 	
-	private ArrayList<RegistroLog> reporte;
+	private RegistroLog reporte;
 
-	public Conexion(Socket StoC, int idassigned, File archiv, byte[] hash, ArrayList<RegistroLog> rlc)
+	public Conexion(Socket StoC, int idassigned, File archiv, byte[] hash)
 	{
-		vigente = StoC; fileToSend = archiv; this.idassigned = idassigned; temphash = hash; reporte = rlc;
+		vigente = StoC; fileToSend = archiv; this.idassigned = idassigned; 
+		temphash = hash; reporte = null;
 		try 
 		{
 			envios = new PrintWriter(vigente.getOutputStream(), true);
@@ -49,12 +51,18 @@ public class Conexion extends Thread
 			System.out.println("El cliente " + idassigned + confirmado + "recibió el archivo incompleto");
 			double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
-			RegistroLog log = new RegistroLog(idassigned, confirmado.equals(" No "), duration); 
-			reporte.add(log); dis.close();
+			reporte = new RegistroLog(idassigned, confirmado.equals(" No "), duration); 
+			dis.close();
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
 	}
+
+	public boolean hasEnded() 
+	{	return end; 	}
+
+	public RegistroLog getReporte()
+	{	return reporte; 	}	
 
 	public void run()
 	{
@@ -76,6 +84,7 @@ public class Conexion extends Thread
 			recibos.close();
 			envios.close();
 			vigente.close();
+			end = true;
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
