@@ -42,6 +42,7 @@ public class Servidor
 			byte[] buffer = new byte [1024]; int length;
 			while ((length = file.read(buffer)) != -1)
 			{	hash.update(buffer, 0, length);	}
+			file.close();
 		} 
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -93,8 +94,8 @@ public class Servidor
 		{	e.printStackTrace();	}
 	}
 
-	public static void forzarTerminacion()
-	{	idassigner = clients;	}
+	//public static void forzarTerminacion()
+	//{	idassigner = clients;	}
 
 	public static void main(String[] args) 
 	{

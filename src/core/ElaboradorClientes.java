@@ -16,11 +16,11 @@ public class ElaboradorClientes
 
 	private static int port;
 
-	private static String hashing; 
+	private static String hashing;
+	
+	public static int contador = 0; 
 
-	private static String descifrado;
-
-	private static ArrayList<RegistroLog> logcliente;
+	public static ArrayList<RegistroLog> logcliente;
 	
 	private static void registrarLog()
 	{
@@ -41,7 +41,7 @@ public class ElaboradorClientes
 
 	public static void main(String[] args) 
 	{
-		encargo = new ArrayList<Cliente>(); hashing = "MD5"; descifrado = "RSA";
+		encargo = new ArrayList<Cliente>(); hashing = "MD5";
 		System.out.println("Bienvenido al Elaborador. Diga cuántos clientes va a crear");
 		totalClients = parametrizador.nextInt(); 
 		System.out.println("Por favor, ingrese la dirección IP del servidor");
@@ -53,7 +53,7 @@ public class ElaboradorClientes
 			logcliente = new ArrayList<RegistroLog>();
 			while(encargo.size() < totalClients)
 			{
-				Cliente neu = new Cliente(ipaddress, port, hashing, descifrado, logcliente);
+				Cliente neu = new Cliente(ipaddress, port, hashing, logcliente, contador);
 				encargo.add(neu); neu.start();
 			}
 			//registrarLog();
