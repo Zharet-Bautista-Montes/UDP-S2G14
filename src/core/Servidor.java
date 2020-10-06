@@ -63,11 +63,10 @@ public class Servidor
 				{
 					if(pool.size() < clients)
 					{
-						//String orden = consola.next();
-						//if(orden.equals("STOP")) forzarTerminacion();
 						Socket newconn = receptor.accept();
 						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, logservidor);
 						pool.add(actual); actual.start(); idassigner++;
+						System.out.println("Clientes en simultáneo: " + pool.size());
 					}					
 				} 
 				catch (IOException e) 

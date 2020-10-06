@@ -54,7 +54,7 @@ public class RegistroLog
 				+ "Client ID: " + idCliente + "\n"
 				+ "Date: " + date.format(fecha_hora) + "\n" 
 				+ "Time: " + time.format(fecha_hora) + "\n"
-				+ "Transfer Time: " + transferTime + "\n"
+				+ "Transfer Time: " + transferTime + " s \n"
 				+ "Successful: " + check;		
 		return thislog;
 	}
