@@ -55,7 +55,7 @@ public class RegistroLog
 				+ "Date: " + date.format(fecha_hora) + "\n" 
 				+ "Time: " + time.format(fecha_hora) + "\n"
 				+ "Transfer Time: " + transferTime + "\n"
-				+ "Successful" + check;		
+				+ "Successful: " + check;		
 		return thislog;
 	}
 }

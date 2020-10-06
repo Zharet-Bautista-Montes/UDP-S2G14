@@ -2,7 +2,6 @@ package core;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.ArrayList;
 
@@ -10,9 +9,7 @@ public class Cliente extends Thread
 {	
 	private Socket principal; 
 	
-	private String ipaddress;
-	
-	private int id, port, ACK, SYN, FIN;
+	private int id;
 	
 	private BufferedReader entrada; 
 	
@@ -24,16 +21,11 @@ public class Cliente extends Thread
 	
 	private String hashing; 
 	
-	private String descifrado; 
-	
 	private ArrayList<RegistroLog> reporte;
 	
 	public Cliente(String ipaddress, int port, String hashing, String descifrado, ArrayList<RegistroLog> reporte)
 	{
-		this.ipaddress = ipaddress;
-		this.port = port;
 		this.hashing = hashing;
-		this.descifrado = descifrado; 
 		this.reporte = reporte;
 		try 
 		{		
@@ -67,20 +59,18 @@ public class Cliente extends Thread
 		{
 			requested = new byte[512];
 			DataInputStream dis = new DataInputStream(principal.getInputStream());
-			String filename = dis.readUTF(); long filesize = dis.readLong(), avance = 0;
-			String hash = dis.readUTF(); System.out.println(hash);
+			String filename = dis.readUTF(); long filesize = dis.readLong();
+			String hash = dis.readUTF();
 			long initime = System.currentTimeMillis(); 
-			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + filename); int piece; 
+			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + "_" + filename); int piece; 
 			while((piece = dis.read(requested)) != -1)
-			{
-				fos.write(requested, 0, piece); avance += piece;
-			}
+			{	fos.write(requested, 0, piece); if(piece < 512) break;	}
 			long fintime = System.currentTimeMillis();
 			proofhash = hash.getBytes(); String neg = " "; 
-			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + filename); 
+			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + "_" + filename); 
 			if(!referenz.equals(proofhash)) neg = " no "; 
 			System.out.println("El archivo enviado al cliente " + id + neg + "fue alterado"); 
-			RegistroLog log = new RegistroLog(id, filename, (double) filesize/1024, neg.equals(" "), (fintime-initime)/1000); 
+			RegistroLog log = new RegistroLog(id, filename, (double) filesize/1024, neg.equals(" no "), (fintime-initime)/1000); 
 			reporte.add(log);
 		} 
 		catch (Exception e) 
@@ -91,9 +81,20 @@ public class Cliente extends Thread
 	{
 		try 
 		{
-			//SYN = 0; salida.println(SYN);
+			int SYN = 1, NSI = 0; salida.println(SYN + ";" + NSI);
+			String[] synservidor = entrada.readLine().split(";");
+			if(Integer.parseInt(synservidor[0]) == 1) System.out.println("SYN Servidor en 1");
+			if(Integer.parseInt(synservidor[2]) == NSI + 1) System.out.println("ACK del servidor");
+			int ACK = Integer.parseInt(synservidor[1]) + 1; SYN = 0; NSI++;
+			salida.println(SYN + ";" + NSI + ";" + ACK);
 			this.id = Integer.parseInt(entrada.readLine());
+			System.out.println("Conexión exitosa");
 			recibirArchivo();
+			int FIN = 1; salida.println(FIN);
+			String[] endservidor = entrada.readLine().split(";");
+			if(Integer.parseInt(endservidor[0]) == 1 && Integer.parseInt(endservidor[1]) == 1)
+				System.out.println("Conexión terminada");
+			ACK = 1; salida.println(ACK);
 			entrada.close();
 			salida.close();
 			principal.close();
