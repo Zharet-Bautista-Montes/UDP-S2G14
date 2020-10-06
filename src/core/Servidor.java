@@ -28,8 +28,6 @@ public class Servidor
 
 	private static int filedigit;
 
-	private static String cifrado;
-
 	private static String hashing;
 
 	private static ArrayList<RegistroLog> logservidor; 
@@ -53,7 +51,7 @@ public class Servidor
 	public static void ejecutar()
 	{
 		String fileloc = ""; byte[] filehash = null;
-		if (filedigit==1) fileloc = "prooffiles/Tarea_HTML.txt";
+		if (filedigit==1) fileloc = "prooffiles/Electrocardiograma funcional.txt";
 		else if (filedigit==2) fileloc = "prooffiles/Tarea_HTML.txt";
 		archivo = new File(fileloc);
 		if(archivo != null)
@@ -68,7 +66,7 @@ public class Servidor
 						//String orden = consola.next();
 						//if(orden.equals("STOP")) forzarTerminacion();
 						Socket newconn = receptor.accept();
-						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, cifrado, logservidor);
+						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash, logservidor);
 						pool.add(actual); actual.start(); idassigner++;
 					}					
 				} 
@@ -116,15 +114,14 @@ public class Servidor
 		}
 		if(clients > 0)
 		{
-			cifrado = "RSA"; hashing = "MD5"; logservidor = new ArrayList<RegistroLog>();
+			hashing = "MD5"; logservidor = new ArrayList<RegistroLog>();
 			try 
 			{	
 				ip = InetAddress.getLocalHost();
 				System.out.println("La dirección IP del servidor es: " + ip.toString());
 				receptor = new ServerSocket(puerto);
-				System.out.println("Si en algún momento desea detener el servidor, solo ingrese STOP");
 				ejecutar();
-				registrarLog();
+				//registrarLog();
 			} 
 			catch (Exception e) 
 			{	e.printStackTrace(); 	}
