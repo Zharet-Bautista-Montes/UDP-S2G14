@@ -45,9 +45,11 @@ public class Conexion extends Thread
 			dis.read(filebytes, 0, 0); int chunk;
 			while((chunk = dis.read(filebytes)) != -1) dos.write(filebytes, 0, chunk);
 			long fintime = System.currentTimeMillis();
-			boolean confirmado = false; 
-			//confirmado = Boolean.parseBoolean(recibos.readLine());
-			RegistroLog log = new RegistroLog(idassigned, confirmado, (fintime-initime)/1000); 
+			String confirmado = " "; //recibos.readLine();
+			System.out.println("El cliente " + idassigned + confirmado + "recibió el archivo incompleto");
+			long duration = (fintime-initime)/1000; 
+			System.out.println("Tiempo de transferencia: " + duration + " s");
+			RegistroLog log = new RegistroLog(idassigned, confirmado.equals(" "), duration); 
 			reporte.add(log);
 		} 
 		catch (Exception e) 
