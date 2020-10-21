@@ -35,6 +35,7 @@ public class ElaboradorClientes
 			for(RegistroLog logC : logcliente)
 				reportador.print(logC.toString());
 			reportador.flush();	reportador.close();
+			System.out.println("Archivo los de clientes creado y guardado");
 		}
 		catch(Exception e)
 		{	e.printStackTrace();	}

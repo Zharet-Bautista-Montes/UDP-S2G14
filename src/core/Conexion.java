@@ -89,5 +89,4 @@ public class Conexion extends Thread
 		catch (Exception e) 
 		{	e.printStackTrace();	}
 	}
-
 }

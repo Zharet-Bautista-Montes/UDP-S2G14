@@ -94,13 +94,11 @@ public class Servidor
 			for(RegistroLog logS : logservidor)
 				reportador.print(logS.toString());
 			reportador.flush();	reportador.close();
+			System.out.println("Archivo los de clientes creado y guardado");
 		}
 		catch(Exception e)
 		{	e.printStackTrace();	}
 	}
-
-	//public static void forzarTerminacion()
-	//{	idassigner = clients;	}
 
 	public static void main(String[] args) 
 	{
