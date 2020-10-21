@@ -1,20 +1,17 @@
 package core;
 
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
+import java.nio.ByteBuffer;
 import java.security.*;
 
 public class Cliente extends Thread
 {	
-	private Socket principal; 
+	private DatagramSocket principal; 
 	
 	private int id;
 	
 	private boolean done; 
-	
-	private BufferedReader entrada; 
-	
-	private PrintWriter salida; 
 	
 	private byte[] requested; 
 	
@@ -29,9 +26,7 @@ public class Cliente extends Thread
 		this.hashing = hashing; done = false; reporte = null;
 		try 
 		{		
-			principal = new Socket(ipaddress, port);
-			entrada = new BufferedReader(new InputStreamReader(principal.getInputStream()));
-			salida = new PrintWriter(principal.getOutputStream(), true);
+			principal = new DatagramSocket(port, InetAddress.getByName(ipaddress));
 			System.out.println("Conexión establecida");
 		}
 		catch (Exception e) 
@@ -94,25 +89,49 @@ public class Cliente extends Thread
 	{
 		try 
 		{
-			int SYN = 1, NSI = 0; salida.println(SYN + ";" + NSI);
-			String[] synservidor = entrada.readLine().split(";");
-			if(Integer.parseInt(synservidor[0]) == 1) System.out.println("SYN Servidor en 1");
-			if(Integer.parseInt(synservidor[2]) == NSI + 1) System.out.println("ACK del servidor");
-			int ACK = Integer.parseInt(synservidor[1]) + 1; SYN = 0; NSI++;
-			salida.println(SYN + ";" + NSI + ";" + ACK);
-			this.id = Integer.parseInt(entrada.readLine());
+			byte[] identificador = new byte[4];
+			DatagramPacket newid = new DatagramPacket(identificador, identificador.length);
+			principal.receive(newid); this.id = ByteBuffer.wrap(identificador).getInt();
 			System.out.println("Conexión exitosa, listo para recibir archivo");
 			recibirArchivo();
-			int FIN = 1; salida.println(FIN);
-			String[] endservidor = entrada.readLine().split(";");
-			if(Integer.parseInt(endservidor[0]) == 1 && Integer.parseInt(endservidor[1]) == 1)
-				System.out.println("FIN Servidor. Conexión terminada");
-			ACK = 1; salida.println(ACK);
-			entrada.close();
-			salida.close();
+			System.out.println("Conexión terminada");
 			principal.close();
 			done = true;
 		} 
+		catch (Exception e) 
+		{	e.printStackTrace();	}
+	}
+	
+	private void enviarDatagrama(Object indata, int lange)
+	{
+		try 
+		{
+			byte[] byter;
+			if(indata instanceof String)
+				byter = ((String) indata).getBytes();
+			else if(indata instanceof Integer)
+				byter = ByteBuffer.allocate(lange).putInt((int) indata).array();
+			else byter = (byte[]) indata;
+			DatagramPacket DP = new DatagramPacket(byter, lange);
+			principal.send(DP);
+		}
+		catch (Exception e) 
+		{	e.printStackTrace();	}
+	}
+	
+	private void recibirDatagrama(Object outdata, int lange)
+	{
+		try 
+		{
+			byte[] byter = new byte[lange];
+			DatagramPacket DP = new DatagramPacket(byter, lange);
+			principal.receive(DP);
+			if(outdata instanceof String)
+				outdata = new String(byter);
+			else if(outdata instanceof Integer)
+				outdata = ByteBuffer.wrap(byter).getInt();
+			else outdata = byter;
+		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
 	}

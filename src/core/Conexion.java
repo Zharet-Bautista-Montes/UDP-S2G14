@@ -1,37 +1,27 @@
 package core;
 
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
+import java.nio.ByteBuffer;
 
 public class Conexion extends Thread
 {
-	private PrintWriter envios; 
-
-	private BufferedReader recibos;
-	
 	private int idassigned;
 	
 	private boolean end;
 	
 	private byte[] temphash;
 
-	private Socket vigente;
+	private DatagramSocket vigente;
 	
 	private File fileToSend;
 	
 	private RegistroLog reporte;
 
-	public Conexion(Socket StoC, int idassigned, File archiv, byte[] hash)
+	public Conexion(DatagramSocket StoC, int idassigned, File archiv, byte[] hash)
 	{
 		vigente = StoC; fileToSend = archiv; this.idassigned = idassigned; 
 		temphash = hash; reporte = null;
-		try 
-		{
-			envios = new PrintWriter(vigente.getOutputStream(), true);
-			recibos = new BufferedReader(new InputStreamReader(vigente.getInputStream()));	
-		} 
-		catch (Exception e) 
-		{	e.printStackTrace();	}
 	}
 	
 	public void transmitirArchivo()
@@ -68,23 +58,48 @@ public class Conexion extends Thread
 	{
 		try 
 		{
-			String[] syncliente = recibos.readLine().split(";");
-			if(Integer.parseInt(syncliente[0]) == 1) System.out.println("SYN Cliente en 1");
-			int SYN = 1, NSI=0, ACK = Integer.parseInt(syncliente[1]) + 1; 
-			envios.println(SYN + ";" + NSI + ";" + ACK);
-			String[] achieved = recibos.readLine().split(";");
-			if(Integer.parseInt(achieved[2]) == NSI + 1) System.out.println("ACK del Cliente");
-			if(Integer.parseInt(achieved[0]) == 0) System.out.println("¡Listo!");
-			envios.println(idassigned);
+			System.out.println("¡Listo!");
+			byte[] id = ByteBuffer.allocate(4).putInt(idassigned).array();
+			DatagramPacket identificacion = new DatagramPacket(id, id.length);
+			vigente.send(identificacion);
 			transmitirArchivo();
-			int endcliente = Integer.parseInt(recibos.readLine());
-			if(endcliente == 1) System.out.println("FIN Cliente");
-			int FIN = 1; ACK = 1; envios.println(FIN + ";" + ACK);
-			if(Integer.parseInt(recibos.readLine()) == 1) System.out.println("¡Hecho!");
-			recibos.close();
-			envios.close();
+			System.out.println("¡Hecho!");
 			vigente.close();
 			end = true;
+		}
+		catch (Exception e) 
+		{	e.printStackTrace();	}
+	}
+	
+	private void enviarDatagrama(Object indata, int lange)
+	{
+		try 
+		{
+			byte[] byter;
+			if(indata instanceof String)
+				byter = ((String) indata).getBytes();
+			else if(indata instanceof Integer)
+				byter = ByteBuffer.allocate(lange).putInt((int) indata).array();
+			else byter = (byte[]) indata;
+			DatagramPacket DP = new DatagramPacket(byter, lange);
+			vigente.send(DP);
+		}
+		catch (Exception e) 
+		{	e.printStackTrace();	}
+	}
+	
+	private void recibirDatagrama(Object outdata, int lange)
+	{
+		try 
+		{
+			byte[] byter = new byte[lange];
+			DatagramPacket DP = new DatagramPacket(byter, lange);
+			vigente.receive(DP);
+			if(outdata instanceof String)
+				outdata = new String(byter);
+			else if(outdata instanceof Integer)
+				outdata = ByteBuffer.wrap(byter).getInt();
+			else outdata = byter;
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
