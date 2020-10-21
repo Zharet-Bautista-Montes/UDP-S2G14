@@ -1,18 +1,14 @@
 package core;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.security.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Scanner;
+import java.util.*;
 public class Servidor 
 {
 	private static Scanner consola = new Scanner(System.in);
 
-	private static ServerSocket receptor; 
+	private static DatagramSocket receptor; 
 
 	private static ArrayList<Conexion> pool;
 
@@ -64,14 +60,13 @@ public class Servidor
 				{
 					if(pool.size() < clients)
 					{
-						Socket newconn = receptor.accept();
-						Conexion actual = new Conexion(newconn, idassigner, archivo, filehash);
+						Conexion actual = new Conexion(receptor, idassigner, archivo, filehash);
 						pool.add(actual); actual.start(); idassigner++;
 						System.out.println("Clientes en simultáneo: " + pool.size());
 					}
 
 				} 
-				catch (IOException e) 
+				catch (Exception e) 
 				{	e.printStackTrace();	}
 			}
 			while(pool.size() > 0)
@@ -121,7 +116,7 @@ public class Servidor
 			{	
 				ip = InetAddress.getLocalHost();
 				System.out.println("La dirección IP del servidor es: " + ip.toString());
-				receptor = new ServerSocket(puerto);
+				receptor = new DatagramSocket(puerto);
 				ejecutar();
 				registrarLog();
 			} 
