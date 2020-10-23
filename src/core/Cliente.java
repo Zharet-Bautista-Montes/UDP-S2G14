@@ -11,6 +11,10 @@ public class Cliente extends Thread
 	
 	private int id;
 	
+	private int port;
+	
+	private String IPown; 
+	
 	private boolean done; 
 	
 	private byte[] requested; 
@@ -21,12 +25,13 @@ public class Cliente extends Thread
 	
 	private RegistroLog reporte;
 	
-	public Cliente(String ipaddress, int port, String hashing)
+	public Cliente(String ipaddress, int Sport, int Cport, String hashing)
 	{
-		this.hashing = hashing; done = false; reporte = null;
+		this.hashing = hashing; done = false; reporte = null; port = Cport;
 		try 
 		{		
-			principal = new DatagramSocket(port, InetAddress.getByName(ipaddress));
+			IPown = InetAddress.getLocalHost().getHostAddress();
+			principal = new DatagramSocket(Sport, InetAddress.getByName(ipaddress));
 			System.out.println("Conexión establecida");
 		}
 		catch (Exception e) 
@@ -82,6 +87,12 @@ public class Cliente extends Thread
 	public boolean isDone() 
 	{	return done;	}
 	
+	public int getPuerto()
+	{	return port;	}
+	
+	public String getDireccionIP()
+	{	return IPown;	}
+	
 	public RegistroLog getReporte()
 	{	return reporte;		}
 
@@ -89,9 +100,10 @@ public class Cliente extends Thread
 	{
 		try 
 		{
-			byte[] identificador = new byte[4];
-			DatagramPacket newid = new DatagramPacket(identificador, identificador.length);
-			principal.receive(newid); this.id = ByteBuffer.wrap(identificador).getInt();
+			//byte[] identificador = new byte[4];
+			//DatagramPacket newid = new DatagramPacket(identificador, identificador.length);
+			//principal.receive(newid); this.id = ByteBuffer.wrap(identificador).getInt();
+			recibirDatagrama(id, 4);
 			System.out.println("Conexión exitosa, listo para recibir archivo");
 			recibirArchivo();
 			System.out.println("Conexión terminada");
@@ -102,16 +114,16 @@ public class Cliente extends Thread
 		{	e.printStackTrace();	}
 	}
 	
-	private void enviarDatagrama(Object indata, int lange)
+	private void enviarDatagrama(Object outdata, int lange)
 	{
 		try 
 		{
 			byte[] byter;
-			if(indata instanceof String)
-				byter = ((String) indata).getBytes();
-			else if(indata instanceof Integer)
-				byter = ByteBuffer.allocate(lange).putInt((int) indata).array();
-			else byter = (byte[]) indata;
+			if(outdata instanceof String)
+				byter = ((String) outdata).getBytes();
+			else if(outdata instanceof Integer)
+				byter = ByteBuffer.allocate(lange).putInt((int) outdata).array();
+			else byter = (byte[]) outdata;
 			DatagramPacket DP = new DatagramPacket(byter, lange);
 			principal.send(DP);
 		}
@@ -119,18 +131,18 @@ public class Cliente extends Thread
 		{	e.printStackTrace();	}
 	}
 	
-	private void recibirDatagrama(Object outdata, int lange)
+	private void recibirDatagrama(Object indata, int lange)
 	{
 		try 
 		{
 			byte[] byter = new byte[lange];
 			DatagramPacket DP = new DatagramPacket(byter, lange);
 			principal.receive(DP);
-			if(outdata instanceof String)
-				outdata = new String(byter);
-			else if(outdata instanceof Integer)
-				outdata = ByteBuffer.wrap(byter).getInt();
-			else outdata = byter;
+			if(indata instanceof String)
+				indata = new String(byter);
+			else if(indata instanceof Integer)
+				indata = ByteBuffer.wrap(byter).getInt();
+			else indata = byter;
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}

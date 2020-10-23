@@ -31,11 +31,15 @@ public class Conexion extends Thread
 			byte[] filebytes = new byte[512]; 
 			DataOutputStream dos = new DataOutputStream(vigente.getOutputStream());
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(fileToSend)));
-			dos.writeUTF(fileToSend.getName()); dos.writeLong(fileToSend.length());
-			dos.writeUTF(new String(temphash));
+			enviarDatagrama(fileToSend.getName(), fileToSend.getName().length());
+			enviarDatagrama(fileToSend.length(), 4);
+			enviarDatagrama(temphash, temphash.length);
+			//dos.writeUTF(fileToSend.getName()); dos.writeLong(fileToSend.length());
+			//dos.writeUTF(new String(temphash));
 			long initime = System.currentTimeMillis();
 			dis.read(filebytes, 0, 0); int chunk;
 			while((chunk = dis.read(filebytes)) != -1) dos.write(filebytes, 0, chunk);
+				
 			long fintime = System.currentTimeMillis();
 			String confirmado = recibos.readLine(); 
 			System.out.println("El cliente " + idassigned + confirmado + "recibió el archivo incompleto");
@@ -62,6 +66,7 @@ public class Conexion extends Thread
 			byte[] id = ByteBuffer.allocate(4).putInt(idassigned).array();
 			DatagramPacket identificacion = new DatagramPacket(id, id.length);
 			vigente.send(identificacion);
+			enviarDatagrama(idassigned, 4);
 			transmitirArchivo();
 			System.out.println("¡Hecho!");
 			vigente.close();
@@ -71,16 +76,16 @@ public class Conexion extends Thread
 		{	e.printStackTrace();	}
 	}
 	
-	private void enviarDatagrama(Object indata, int lange)
+	private void enviarDatagrama(Object outdata, int lange)
 	{
 		try 
 		{
 			byte[] byter;
-			if(indata instanceof String)
-				byter = ((String) indata).getBytes();
-			else if(indata instanceof Integer)
-				byter = ByteBuffer.allocate(lange).putInt((int) indata).array();
-			else byter = (byte[]) indata;
+			if(outdata instanceof String)
+				byter = ((String) outdata).getBytes();
+			else if(outdata instanceof Integer)
+				byter = ByteBuffer.allocate(lange).putInt((int) outdata).array();
+			else byter = (byte[]) outdata;
 			DatagramPacket DP = new DatagramPacket(byter, lange);
 			vigente.send(DP);
 		}
@@ -88,18 +93,18 @@ public class Conexion extends Thread
 		{	e.printStackTrace();	}
 	}
 	
-	private void recibirDatagrama(Object outdata, int lange)
+	private void recibirDatagrama(Object indata, int lange)
 	{
 		try 
 		{
 			byte[] byter = new byte[lange];
 			DatagramPacket DP = new DatagramPacket(byter, lange);
 			vigente.receive(DP);
-			if(outdata instanceof String)
-				outdata = new String(byter);
-			else if(outdata instanceof Integer)
-				outdata = ByteBuffer.wrap(byter).getInt();
-			else outdata = byter;
+			if(indata instanceof String)
+				indata = new String(byter);
+			else if(indata instanceof Integer)
+				indata = ByteBuffer.wrap(byter).getInt();
+			else indata = byter;
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
