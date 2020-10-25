@@ -7,19 +7,19 @@ import java.nio.ByteBuffer;
 public class Conexion extends Thread
 {
 	private int idassigned;
-	
+
 	private InetAddress clientIP;
-	
+
 	private int clientPort;
-	
+
 	private boolean end;
-	
+
 	private byte[] temphash;
 
 	private DatagramSocket vigente;
-	
+
 	private File fileToSend;
-	
+
 	private RegistroLog reporte;
 
 	public Conexion(String ip, int port, DatagramSocket StoC, int idassigned, File archiv, byte[] hash)
@@ -31,25 +31,24 @@ public class Conexion extends Thread
 		catch (Exception e) 
 		{	e.printStackTrace();	}
 	}
-	
+
 	public void transmitirArchivo()
 	{
 		try 
 		{
 			byte[] filebytes = new byte[512]; 
-			DataOutputStream dos = new DataOutputStream(vigente.getOutputStream());
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(fileToSend)));
-			enviarDatagrama(fileToSend.getName(), fileToSend.getName().length());
-			enviarDatagrama(fileToSend.length(), 4);
-			enviarDatagrama(temphash, temphash.length);
-			//dos.writeUTF(fileToSend.getName()); dos.writeLong(fileToSend.length());
-			//dos.writeUTF(new String(temphash));
+			enviarDatagrama(fileToSend.getName(), 1);
+			enviarDatagrama((int) fileToSend.length(), 4);
+			enviarDatagrama(temphash, 1);
 			long initime = System.currentTimeMillis();
 			dis.read(filebytes, 0, 0); int chunk;
-			while((chunk = dis.read(filebytes)) != -1) dos.write(filebytes, 0, chunk);
-				
+			while((chunk = dis.read(filebytes)) != -1)
+			{
+				enviarDatagrama(filebytes, chunk);				
+			}
 			long fintime = System.currentTimeMillis();
-			String confirmado = recibos.readLine(); 
+			String confirmado = ""; recibirDatagrama(confirmado, 4); 
 			System.out.println("El cliente " + idassigned + confirmado + "recibió el archivo incompleto");
 			double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
@@ -71,19 +70,14 @@ public class Conexion extends Thread
 		try 
 		{
 			System.out.println("¡Listo!");
-			byte[] id = ByteBuffer.allocate(4).putInt(idassigned).array();
-			DatagramPacket identificacion = new DatagramPacket(id, id.length);
-			vigente.send(identificacion);
-			enviarDatagrama(idassigned, 4);
 			transmitirArchivo();
 			System.out.println("¡Hecho!");
-			vigente.close();
 			end = true;
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
 	}
-	
+
 	private void enviarDatagrama(Object outdata, int lange)
 	{
 		try 
@@ -94,13 +88,13 @@ public class Conexion extends Thread
 			else if(outdata instanceof Integer)
 				byter = ByteBuffer.allocate(lange).putInt((int) outdata).array();
 			else byter = (byte[]) outdata;
-			DatagramPacket DP = new DatagramPacket(byter, lange);
+			DatagramPacket DP = new DatagramPacket(byter, lange, clientIP, clientPort);
 			vigente.send(DP);
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
 	}
-	
+
 	private void recibirDatagrama(Object indata, int lange)
 	{
 		try 

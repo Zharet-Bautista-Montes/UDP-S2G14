@@ -55,27 +55,29 @@ public class Servidor
 		if(archivo != null)
 		{	
 			filehash = obtenerHash(hashing, fileloc);	
-			while(clients >= (idassigner + 1))
+			try
 			{
-				try 
+				ServerSocket contexter = new ServerSocket(puerto);
+				Socket acuerdo = contexter.accept(); contexter.close();
+				BufferedReader br = new BufferedReader(new InputStreamReader(acuerdo.getInputStream()));
+				String CIP = br.readLine(); int[] portset = new int[clients]; 
+				for(int z = 0; z < clients; z++)
+					portset[z] = Integer.parseInt(br.readLine());
+				
+				while(clients >= (idassigner + 1))
 				{
-					ServerSocket contexter = new ServerSocket(puerto+1);
-					Socket acuerdo = contexter.accept(); contexter.close();
-					BufferedReader br = new BufferedReader(new InputStreamReader(acuerdo.getInputStream()));
-					String CIP = br.readLine();
 					if(pool.size() < clients)
 					{
-						int Cport = Integer.parseInt(br.readLine());
-						Conexion actual = new Conexion(CIP, Cport, receptor, idassigner, archivo, filehash);
+						Conexion actual = new Conexion(CIP, portset[idassigner], receptor, idassigner, archivo, filehash);
 						pool.add(actual); actual.start(); idassigner++;
-						System.out.println("Clientes en simultáneo: " + pool.size() + " en el puerto" + Cport);
+						System.out.println("Clientes en simultáneo: " + pool.size() + " en el puerto " + portset[idassigner-1]);
 					}
-					br.close(); acuerdo.close(); 
-
-				} 
-				catch (Exception e) 
-				{	e.printStackTrace();	}
+				}
+				br.close(); acuerdo.close();
 			}
+			catch (Exception e) 
+			{	e.printStackTrace();	}
+			
 			while(pool.size() > 0)
 			{
 				Conexion s = pool.get(0);
@@ -96,7 +98,7 @@ public class Servidor
 			for(RegistroLog logS : logservidor)
 				reportador.print(logS.toString());
 			reportador.flush();	reportador.close();
-			System.out.println("Archivo los de clientes creado y guardado");
+			System.out.println("Archivo log de servidor creado y guardado");
 		}
 		catch(Exception e)
 		{	e.printStackTrace();	}
@@ -124,7 +126,7 @@ public class Servidor
 				ip = InetAddress.getLocalHost();
 				System.out.println("La dirección IP del servidor es: " + ip.getHostAddress());
 				receptor = new DatagramSocket(puerto, ip);
-				ejecutar();
+				ejecutar();  receptor.close();
 				registrarLog();
 			} 
 			catch (Exception e) 
