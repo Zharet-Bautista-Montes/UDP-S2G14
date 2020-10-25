@@ -1,6 +1,9 @@
 package core;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
@@ -52,26 +55,34 @@ public class ElaboradorClientes
 		ipaddress = parametrizador.next(); 
 		System.out.println("Ahora indique el puerto de conexion");
 		port = parametrizador.nextInt();		
-		assignedports = new ArrayList<Integer>();
-		
-		if(totalClients > 0)
+		assignedports = new ArrayList<Integer>(); assignedports.add(port);
+		try 
 		{
-			logcliente = new ArrayList<RegistroLog>();
-			while(encargo.size() < totalClients)
-			{	
-				int u = 0;
-				while(u == 0 || assignedports.contains(u))
-					u = (int) (49152 + Math.random()*16383);
-				assignedports.add(u);
-				Cliente neu = new Cliente(ipaddress, port, u, hashing); 
-				encargo.add(neu); //neu.start();	
-			}
-			while(encargo.size() > 0)
+			Socket acuerdo = new Socket(InetAddress.getByName(ipaddress), port+1);
+			PrintWriter pw = new PrintWriter(acuerdo.getOutputStream(), true);
+			pw.println(InetAddress.getLocalHost().getHostName());
+			if(totalClients > 0)
 			{
-				Cliente c = encargo.get(0);
-				if(c.isDone()) { logcliente.add(c.getReporte()); encargo.remove(c); }
+				logcliente = new ArrayList<RegistroLog>();
+				while(encargo.size() < totalClients)
+				{	
+					int u = 0;
+					while(u == 0 || assignedports.contains(u))
+						u = (int) (49152 + Math.random()*16383);
+					assignedports.add(u); pw.println(u);
+					Cliente neu = new Cliente(ipaddress, port, hashing); 
+					encargo.add(neu); //neu.start();	
+				}
+				pw.close(); acuerdo.close();
+				while(encargo.size() > 0)
+				{
+					Cliente c = encargo.get(0);
+					if(c.isDone()) { logcliente.add(c.getReporte()); encargo.remove(c); }
+				}
+				registrarLog();
 			}
-			registrarLog();
 		}
+		catch (Exception e) 
+		{	e.printStackTrace(); 	}
 	}
 }

@@ -25,9 +25,9 @@ public class Cliente extends Thread
 	
 	private RegistroLog reporte;
 	
-	public Cliente(String ipaddress, int Sport, int Cport, String hashing)
+	public Cliente(String ipaddress, int Sport, String hashing)
 	{
-		this.hashing = hashing; done = false; reporte = null; port = Cport;
+		this.hashing = hashing; done = false; reporte = null;
 		try 
 		{		
 			IPown = InetAddress.getLocalHost().getHostAddress();

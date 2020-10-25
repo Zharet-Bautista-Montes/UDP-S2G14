@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.*;
+
 public class Servidor 
 {
 	private static Scanner consola = new Scanner(System.in);
@@ -58,12 +59,18 @@ public class Servidor
 			{
 				try 
 				{
+					ServerSocket contexter = new ServerSocket(puerto+1);
+					Socket acuerdo = contexter.accept(); contexter.close();
+					BufferedReader br = new BufferedReader(new InputStreamReader(acuerdo.getInputStream()));
+					String CIP = br.readLine();
 					if(pool.size() < clients)
 					{
-						Conexion actual = new Conexion(receptor, idassigner, archivo, filehash);
+						int Cport = Integer.parseInt(br.readLine());
+						Conexion actual = new Conexion(CIP, Cport, receptor, idassigner, archivo, filehash);
 						pool.add(actual); actual.start(); idassigner++;
-						System.out.println("Clientes en simultáneo: " + pool.size());
+						System.out.println("Clientes en simultáneo: " + pool.size() + " en el puerto" + Cport);
 					}
+					br.close(); acuerdo.close(); 
 
 				} 
 				catch (Exception e) 
@@ -98,7 +105,7 @@ public class Servidor
 	public static void main(String[] args) 
 	{
 		pool = new ArrayList<Conexion>();
-		System.out.println("Bienvenido al servidor TCP. Por favor, configure su puerto");
+		System.out.println("Bienvenido al servidor UDP. Por favor, configure su puerto");
 		puerto = consola.nextInt(); 
 		System.out.println("Perfecto. Diga a cuántos clientes en simultáneo va a conectarse el servidor");
 		clients = consola.nextInt(); boolean wrong = true;

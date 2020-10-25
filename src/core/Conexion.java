@@ -8,6 +8,10 @@ public class Conexion extends Thread
 {
 	private int idassigned;
 	
+	private InetAddress clientIP;
+	
+	private int clientPort;
+	
 	private boolean end;
 	
 	private byte[] temphash;
@@ -18,10 +22,14 @@ public class Conexion extends Thread
 	
 	private RegistroLog reporte;
 
-	public Conexion(DatagramSocket StoC, int idassigned, File archiv, byte[] hash)
+	public Conexion(String ip, int port, DatagramSocket StoC, int idassigned, File archiv, byte[] hash)
 	{
 		vigente = StoC; fileToSend = archiv; this.idassigned = idassigned; 
-		temphash = hash; reporte = null;
+		temphash = hash; reporte = null; clientPort = port; 
+		try
+		{	clientIP = InetAddress.getByName(ip);	}
+		catch (Exception e) 
+		{	e.printStackTrace();	}
 	}
 	
 	public void transmitirArchivo()
