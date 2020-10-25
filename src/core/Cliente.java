@@ -13,11 +13,9 @@ public class Cliente extends Thread
 	
 	private int port;
 	
-	private String IPown; 
+	private InetAddress IPServer; 
 	
 	private boolean done; 
-	
-	private byte[] requested; 
 	
 	private byte[] proofhash = {}; 
 	
@@ -25,14 +23,14 @@ public class Cliente extends Thread
 	
 	private RegistroLog reporte;
 	
-	public Cliente(String ipaddress, int Sport, int Cport, String hashing)
+	public Cliente(int id, String ipaddress, int Sport, int Cport, String hashing)
 	{
-		this.hashing = hashing; done = false; reporte = null; port = Cport;
+		this.hashing = hashing; done = false; reporte = null; this.id = id;
 		try 
 		{		
-			IPown = InetAddress.getLocalHost().getHostAddress();
-			principal = new DatagramSocket(Sport, InetAddress.getByName(ipaddress));
-			System.out.println("Conexión establecida");
+			IPServer = InetAddress.getByName(ipaddress); port = Sport;
+			principal = new DatagramSocket(Cport);
+			System.out.println("Conexión establecida en " + Cport);
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
@@ -59,23 +57,30 @@ public class Cliente extends Thread
 	{		
 		try 
 		{
-			requested = new byte[512];
-			DataInputStream dis = new DataInputStream(principal.getInputStream());
-			String filename = dis.readUTF(); long filesize = dis.readLong();
-			String hash = dis.readUTF(); int conteo = 0, piece;
+			byte[] requested = new byte[512]; 
+			String filename = ""; int filesize = 0, conteo = 0; 
+			recibirDatagrama(filename, 1);
+			recibirDatagrama(filesize, 4);
+			recibirDatagrama(proofhash, 1);
 			long initime = System.currentTimeMillis(); 
 			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + "_" + filename); 
-			while((piece = dis.read(requested)) != -1)
-			{	fos.write(requested, 0, piece); conteo += piece; if(piece < 512) break;	}
-			long fintime = System.currentTimeMillis();
-			System.out.println("Archivo recibido y en verificación:");
-			proofhash = hash.getBytes(); String neg = " "; 
+			recibirDatagrama(requested, requested.length);
+			while(conteo < filesize)
+			{	
+				fos.write(requested, 0, requested.length); conteo += requested.length;
+				if(filesize - conteo < 512)
+					requested = new byte[filesize - conteo];
+				recibirDatagrama(requested, requested.length);	
+			}
+			long fintime = System.currentTimeMillis(); String neg = "    ";
+			System.out.println("Archivo recibido y en verificación:");		 
 			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + "_" + filename); 
 			if(!referenz.equals(proofhash)) neg = " No "; 
 			System.out.println("El archivo recibido por el cliente " + id + neg + "fue alterado"); 
 			String komplett = "Recibió el archivo completamente";
 			if(conteo < filesize) komplett = neg + komplett; System.out.println(komplett);
-			salida.println(neg); double duration = (fintime-initime)/1000.0; 
+			enviarDatagrama(neg, 4);
+			double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
 			reporte = new RegistroLog(id, filename, (double) filesize/(Math.pow(1024, 2)), neg.equals(" No "), duration); 
 			fos.close();
@@ -91,7 +96,7 @@ public class Cliente extends Thread
 	{	return port;	}
 	
 	public String getDireccionIP()
-	{	return IPown;	}
+	{	return IPServer.getHostName();	}
 	
 	public RegistroLog getReporte()
 	{	return reporte;		}
@@ -100,10 +105,7 @@ public class Cliente extends Thread
 	{
 		try 
 		{
-			//byte[] identificador = new byte[4];
-			//DatagramPacket newid = new DatagramPacket(identificador, identificador.length);
-			//principal.receive(newid); this.id = ByteBuffer.wrap(identificador).getInt();
-			recibirDatagrama(id, 4);
+			//recibirDatagrama(id, 4); System.out.println(id);
 			System.out.println("Conexión exitosa, listo para recibir archivo");
 			recibirArchivo();
 			System.out.println("Conexión terminada");
@@ -124,7 +126,7 @@ public class Cliente extends Thread
 			else if(outdata instanceof Integer)
 				byter = ByteBuffer.allocate(lange).putInt((int) outdata).array();
 			else byter = (byte[]) outdata;
-			DatagramPacket DP = new DatagramPacket(byter, lange);
+			DatagramPacket DP = new DatagramPacket(byter, lange, IPServer, port);
 			principal.send(DP);
 		}
 		catch (Exception e) 

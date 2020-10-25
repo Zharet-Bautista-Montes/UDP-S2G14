@@ -1,6 +1,7 @@
 package core;
 
 import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
@@ -37,7 +38,7 @@ public class ElaboradorClientes
 			for(RegistroLog logC : logcliente)
 				reportador.print(logC.toString());
 			reportador.flush();	reportador.close();
-			System.out.println("Archivo los de clientes creado y guardado");
+			System.out.println("Archivo log de clientes creado y guardado");
 		}
 		catch(Exception e)
 		{	e.printStackTrace();	}
@@ -52,26 +53,34 @@ public class ElaboradorClientes
 		ipaddress = parametrizador.next(); 
 		System.out.println("Ahora indique el puerto de conexion");
 		port = parametrizador.nextInt();		
-		assignedports = new ArrayList<Integer>();
-		
-		if(totalClients > 0)
+		assignedports = new ArrayList<Integer>(); assignedports.add(port);
+		try 
 		{
-			logcliente = new ArrayList<RegistroLog>();
-			while(encargo.size() < totalClients)
-			{	
-				int u = 0;
-				while(u == 0 || assignedports.contains(u))
-					u = (int) (49152 + Math.random()*16383);
-				assignedports.add(u);
-				Cliente neu = new Cliente(ipaddress, port, u, hashing); 
-				encargo.add(neu); //neu.start();	
-			}
-			while(encargo.size() > 0)
+			Socket acuerdo = new Socket(InetAddress.getByName(ipaddress), port);
+			PrintWriter pw = new PrintWriter(acuerdo.getOutputStream(), true);
+			pw.println(InetAddress.getLocalHost().getHostName());
+			if(totalClients > 0)
 			{
-				Cliente c = encargo.get(0);
-				if(c.isDone()) { logcliente.add(c.getReporte()); encargo.remove(c); }
+				logcliente = new ArrayList<RegistroLog>(); int i = 0;
+				while(encargo.size() < totalClients)
+				{	
+					int u = 0;
+					while(u == 0 || assignedports.contains(u))
+						u = (int) (49152 + Math.random()*16383);
+					assignedports.add(u); pw.println(u);
+					Cliente neu = new Cliente(i, ipaddress, port, u, hashing); 
+					encargo.add(neu); neu.start(); i++; 
+				}
+				pw.close(); acuerdo.close();
+				while(encargo.size() > 0)
+				{
+					Cliente c = encargo.get(0);
+					if(c.isDone()) { logcliente.add(c.getReporte()); encargo.remove(c); }
+				}
+				registrarLog();
 			}
-			registrarLog();
 		}
+		catch (Exception e) 
+		{	e.printStackTrace(); 	}
 	}
 }
