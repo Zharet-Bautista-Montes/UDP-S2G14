@@ -115,8 +115,8 @@ public class Servidor
 			try 
 			{	
 				ip = InetAddress.getLocalHost();
-				System.out.println("La dirección IP del servidor es: " + ip.toString());
-				receptor = new DatagramSocket(puerto);
+				System.out.println("La dirección IP del servidor es: " + ip.getHostAddress());
+				receptor = new DatagramSocket(puerto, ip);
 				ejecutar();
 				registrarLog();
 			} 

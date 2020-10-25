@@ -23,6 +23,8 @@ public class ElaboradorClientes
 
 	public static ArrayList<RegistroLog> logcliente;
 	
+	public static ArrayList<Integer> assignedports;
+	
 	private static void registrarLog()
 	{
 		File reporteC = new File("clientlog/Prueba_" + totalClients);
@@ -49,12 +51,21 @@ public class ElaboradorClientes
 		System.out.println("Por favor, ingrese la dirección IP del servidor");
 		ipaddress = parametrizador.next(); 
 		System.out.println("Ahora indique el puerto de conexion");
-		port = parametrizador.nextInt();
+		port = parametrizador.nextInt();		
+		assignedports = new ArrayList<Integer>();
+		
 		if(totalClients > 0)
 		{
 			logcliente = new ArrayList<RegistroLog>();
 			while(encargo.size() < totalClients)
-			{	Cliente neu = new Cliente(ipaddress, port, hashing); encargo.add(neu); neu.start();	}
+			{	
+				int u = 0;
+				while(u == 0 || assignedports.contains(u))
+					u = (int) (49152 + Math.random()*16383);
+				assignedports.add(u);
+				Cliente neu = new Cliente(ipaddress, port, u, hashing); 
+				encargo.add(neu); //neu.start();	
+			}
 			while(encargo.size() > 0)
 			{
 				Cliente c = encargo.get(0);
