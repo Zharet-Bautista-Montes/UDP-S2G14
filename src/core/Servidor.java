@@ -63,7 +63,9 @@ public class Servidor
 					{
 						byte[] byter = new byte[4];
 						DatagramPacket DP = new DatagramPacket(byter, byter.length);
-						receptor.receive(DP); System.out.println(new String(DP.getData()));
+						receptor.receive(DP); 
+						DP = new DatagramPacket(byter, byter.length, DP.getAddress(), DP.getPort());
+						receptor.send(DP);
 						Conexion actual = new Conexion(DP.getAddress(), DP.getPort(), receptor, idassigner, archivo, filehash);
 						pool.add(actual); actual.start(); idassigner++;
 						System.out.println("Clientes en simultáneo: " + pool.size() + " en el puerto " + DP.getPort());
@@ -121,7 +123,7 @@ public class Servidor
 				ip = InetAddress.getLocalHost();
 				System.out.println("La dirección IP del servidor es: " + ip.getHostAddress());
 				receptor = new DatagramSocket(puerto, ip);
-				ejecutar();  receptor.close();
+				ejecutar(); 	receptor.close();
 				registrarLog();
 			} 
 			catch (Exception e) 

@@ -17,8 +17,6 @@ public class Cliente extends Thread
 	
 	private boolean done; 
 	
-	private byte[] proofhash = {}; 
-	
 	private String hashing; 
 	
 	private RegistroLog reporte;
@@ -57,29 +55,32 @@ public class Cliente extends Thread
 	{		
 		try 
 		{
-			byte[] requested = new byte[512]; 
-			String filename = ""; int filesize = 0, conteo = 0; 
-			recibirDatagrama(filename, 1);
-			recibirDatagrama(filesize, 4);
-			recibirDatagrama(proofhash, 1);
+			byte[] requested = new byte[512], proofhash = {}; 
+			String filename = ""; int conteo = 0;
+			int namesize = 0, filesize = 0, hashsize = 0; 
+			namesize = (int) recibirDatagrama(namesize, 4);
+			filename = (String) recibirDatagrama(filename, namesize);
+			filesize = (int) recibirDatagrama(filesize, 4);
+			hashsize = (int) recibirDatagrama(hashsize, 4);
+			proofhash = (byte[]) recibirDatagrama(proofhash, hashsize);
 			long initime = System.currentTimeMillis(); 
 			FileOutputStream fos = new FileOutputStream("clientfiles/" + id + "_" + filename); 
-			recibirDatagrama(requested, requested.length);
+			requested = (byte[]) recibirDatagrama(requested, requested.length);
 			while(conteo < filesize)
 			{	
 				fos.write(requested, 0, requested.length); conteo += requested.length;
 				if(filesize - conteo < 512)
-					requested = new byte[filesize - conteo];
-				recibirDatagrama(requested, requested.length);	
+				{	requested = new byte[filesize - conteo]; conteo = filesize;	}
+				requested = (byte[]) recibirDatagrama(requested, requested.length);	
 			}
-			long fintime = System.currentTimeMillis(); String neg = "    ";
+			long fintime = System.currentTimeMillis(); String neg = "   ";
 			System.out.println("Archivo recibido y en verificación:");		 
 			byte[] referenz = obtenerHash(hashing, "clientfiles/" + id + "_" + filename); 
-			if(!referenz.equals(proofhash)) neg = " No "; 
-			System.out.println("El archivo recibido por el cliente " + id + neg + "fue alterado"); 
-			String komplett = "Recibió el archivo completamente";
+			if(!referenz.equals(proofhash)) neg = " No"; 
+			System.out.println("El archivo recibido por el cliente " + id + neg + " fue alterado"); 
+			String komplett = "Recibió el archivo correctamente";
 			if(conteo < filesize) komplett = neg + komplett; System.out.println(komplett);
-			enviarDatagrama(neg, 4);
+			enviarDatagrama(neg, 3);
 			double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
 			reporte = new RegistroLog(id, filename, (double) filesize/(Math.pow(1024, 2)), neg.equals(" No "), duration); 
@@ -105,8 +106,8 @@ public class Cliente extends Thread
 	{
 		try 
 		{
-			//recibirDatagrama(id, 4); System.out.println(id);
 			enviarDatagrama(id, 4);
+			recibirDatagrama(id, 4);
 			System.out.println("Conexión exitosa, listo para recibir archivo");
 			recibirArchivo();
 			System.out.println("Conexión terminada");
@@ -134,7 +135,7 @@ public class Cliente extends Thread
 		{	e.printStackTrace();	}
 	}
 	
-	private void recibirDatagrama(Object indata, int lange)
+	private Object recibirDatagrama(Object indata, int lange)
 	{
 		try 
 		{
@@ -149,5 +150,6 @@ public class Cliente extends Thread
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
+		return indata;
 	}
 }
