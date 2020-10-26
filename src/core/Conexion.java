@@ -34,21 +34,22 @@ public class Conexion extends Thread
 		{
 			byte[] filebytes = new byte[512]; 
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(fileToSend)));
-			enviarDatagrama(fileToSend.getName(), 1);
+			int namesize = fileToSend.getName().length(), hashsize = temphash.length;
+			enviarDatagrama(namesize, 4);
+			enviarDatagrama(fileToSend.getName(), namesize);
 			enviarDatagrama((int) fileToSend.length(), 4);
-			enviarDatagrama(temphash, 1);
+			enviarDatagrama(hashsize, 4);
+			enviarDatagrama(temphash, hashsize);
 			long initime = System.currentTimeMillis();
 			dis.read(filebytes, 0, 0); int chunk;
 			while((chunk = dis.read(filebytes)) != -1)
-			{
-				enviarDatagrama(filebytes, chunk);				
-			}
+				enviarDatagrama(filebytes, chunk);
 			long fintime = System.currentTimeMillis();
-			String confirmado = ""; recibirDatagrama(confirmado, 4); 
+			String confirmado = ""; confirmado = (String) recibirDatagrama(confirmado, 3); 
 			System.out.println("El cliente " + idassigned + confirmado + " recibió el archivo incompleto");
 			double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
-			reporte = new RegistroLog(idassigned, confirmado.equals(" No "), duration); 
+			reporte = new RegistroLog(idassigned, confirmado.equals(" No"), duration); 
 			dis.close();
 		} 
 		catch (Exception e) 
@@ -91,7 +92,7 @@ public class Conexion extends Thread
 		{	e.printStackTrace();	}
 	}
 
-	private void recibirDatagrama(Object indata, int lange)
+	private Object recibirDatagrama(Object indata, int lange)
 	{
 		try 
 		{
@@ -106,5 +107,6 @@ public class Conexion extends Thread
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
+		return indata;
 	}
 }
