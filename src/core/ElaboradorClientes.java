@@ -56,9 +56,6 @@ public class ElaboradorClientes
 		assignedports = new ArrayList<Integer>(); assignedports.add(port);
 		try 
 		{
-			Socket acuerdo = new Socket(InetAddress.getByName(ipaddress), port);
-			PrintWriter pw = new PrintWriter(acuerdo.getOutputStream(), true);
-			pw.println(InetAddress.getLocalHost().getHostName());
 			if(totalClients > 0)
 			{
 				logcliente = new ArrayList<RegistroLog>(); int i = 0;
@@ -67,11 +64,10 @@ public class ElaboradorClientes
 					int u = 0;
 					while(u == 0 || assignedports.contains(u))
 						u = (int) (49152 + Math.random()*16383);
-					assignedports.add(u); pw.println(u);
+					assignedports.add(u);
 					Cliente neu = new Cliente(i, ipaddress, port, u, hashing); 
 					encargo.add(neu); neu.start(); i++; 
 				}
-				pw.close(); acuerdo.close();
 				while(encargo.size() > 0)
 				{
 					Cliente c = encargo.get(0);
