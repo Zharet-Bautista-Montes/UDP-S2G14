@@ -106,6 +106,7 @@ public class Cliente extends Thread
 		try 
 		{
 			//recibirDatagrama(id, 4); System.out.println(id);
+			enviarDatagrama(id, 4);
 			System.out.println("Conexión exitosa, listo para recibir archivo");
 			recibirArchivo();
 			System.out.println("Conexión terminada");
@@ -141,10 +142,10 @@ public class Cliente extends Thread
 			DatagramPacket DP = new DatagramPacket(byter, lange);
 			principal.receive(DP);
 			if(indata instanceof String)
-				indata = new String(byter);
+				indata = new String(DP.getData());
 			else if(indata instanceof Integer)
-				indata = ByteBuffer.wrap(byter).getInt();
-			else indata = byter;
+				indata = ByteBuffer.wrap(DP.getData()).getInt();
+			else indata = DP.getData();
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}

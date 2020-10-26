@@ -56,24 +56,19 @@ public class Servidor
 		{	
 			filehash = obtenerHash(hashing, fileloc);	
 			try
-			{
-				ServerSocket contexter = new ServerSocket(puerto);
-				Socket acuerdo = contexter.accept(); contexter.close();
-				BufferedReader br = new BufferedReader(new InputStreamReader(acuerdo.getInputStream()));
-				String CIP = br.readLine(); int[] portset = new int[clients]; 
-				for(int z = 0; z < clients; z++)
-					portset[z] = Integer.parseInt(br.readLine());
-				
+			{			
 				while(clients >= (idassigner + 1))
 				{
 					if(pool.size() < clients)
 					{
-						Conexion actual = new Conexion(CIP, portset[idassigner], receptor, idassigner, archivo, filehash);
+						byte[] byter = new byte[4];
+						DatagramPacket DP = new DatagramPacket(byter, byter.length);
+						receptor.receive(DP); System.out.println(new String(DP.getData()));
+						Conexion actual = new Conexion(DP.getAddress(), DP.getPort(), receptor, idassigner, archivo, filehash);
 						pool.add(actual); actual.start(); idassigner++;
-						System.out.println("Clientes en simultáneo: " + pool.size() + " en el puerto " + portset[idassigner-1]);
+						System.out.println("Clientes en simultáneo: " + pool.size() + " en el puerto " + DP.getPort());
 					}
 				}
-				br.close(); acuerdo.close();
 			}
 			catch (Exception e) 
 			{	e.printStackTrace();	}

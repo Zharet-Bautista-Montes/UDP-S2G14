@@ -22,14 +22,10 @@ public class Conexion extends Thread
 
 	private RegistroLog reporte;
 
-	public Conexion(String ip, int port, DatagramSocket StoC, int idassigned, File archiv, byte[] hash)
+	public Conexion(InetAddress ip, int port, DatagramSocket StoC, int idassigned, File archiv, byte[] hash)
 	{
 		vigente = StoC; fileToSend = archiv; this.idassigned = idassigned; 
-		temphash = hash; reporte = null; clientPort = port; 
-		try
-		{	clientIP = InetAddress.getByName(ip);	}
-		catch (Exception e) 
-		{	e.printStackTrace();	}
+		temphash = hash; reporte = null; clientPort = port; clientIP = ip;
 	}
 
 	public void transmitirArchivo()
@@ -49,7 +45,7 @@ public class Conexion extends Thread
 			}
 			long fintime = System.currentTimeMillis();
 			String confirmado = ""; recibirDatagrama(confirmado, 4); 
-			System.out.println("El cliente " + idassigned + confirmado + "recibió el archivo incompleto");
+			System.out.println("El cliente " + idassigned + confirmado + " recibió el archivo incompleto");
 			double duration = (fintime-initime)/1000.0; 
 			System.out.println("Tiempo de transferencia: " + duration + " s");
 			reporte = new RegistroLog(idassigned, confirmado.equals(" No "), duration); 
@@ -103,10 +99,10 @@ public class Conexion extends Thread
 			DatagramPacket DP = new DatagramPacket(byter, lange);
 			vigente.receive(DP);
 			if(indata instanceof String)
-				indata = new String(byter);
+				indata = new String(DP.getData());
 			else if(indata instanceof Integer)
-				indata = ByteBuffer.wrap(byter).getInt();
-			else indata = byter;
+				indata = ByteBuffer.wrap(DP.getData()).getInt();
+			else indata = DP.getData();
 		}
 		catch (Exception e) 
 		{	e.printStackTrace();	}
